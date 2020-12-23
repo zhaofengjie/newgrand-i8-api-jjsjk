@@ -5,14 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 合同计量结算明细模型
+ * 其他合同计量结算明细模型
  * @Author ChenXiangLu
  * @Date 2020/12/2 10:52
  * @Version 1.0
  */
 @Getter
 @Setter
-public class CntMeasureItemModel {
+public class CntMeasureOtherItemModel {
+
     /**
      * 编码
      */
@@ -23,10 +24,6 @@ public class CntMeasureItemModel {
     @Ignore
     private String pphid;
     /**
-     * 经济数据库id
-     */
-    private String jjsjk;
-    /**
      * 清单编码
      */
     private String item_no;
@@ -34,6 +31,10 @@ public class CntMeasureItemModel {
      * 清单名称
      */
     private String item_name;
+    /**
+     * 物料分类
+     */
+    private String resBsNo;
     /**
      * 单价
      */

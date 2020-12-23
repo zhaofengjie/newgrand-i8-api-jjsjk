@@ -1,11 +1,24 @@
 package com.newgrand.secdev.controller.EDB;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.newgrand.secdev.config.IJdbcTemplate;
 import com.newgrand.secdev.domain.EDB.CntModel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -14,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.swing.text.StringContent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,13 +44,20 @@ import java.util.List;
 public class CntController {
 
     @Autowired
+    private CloseableHttpClient httpClient;
+    @Autowired
     @Resource(name = "jdbcTemplateOrcle")
-    protected JdbcTemplate jdbcTemplate;
+    protected IJdbcTemplate jdbcTemplate;
+    @Value("${i8.edb.url.cnt}")
+    private String cntUrl;
 
     @ApiOperation(value="推送合同数据到经济数据库", notes="推送合同数据到经济数据库", produces="application/json")
     @RequestMapping(value = "/getCnt",method = RequestMethod.GET)
     public String syncProCount()
     {
+//        String dsds="{\"code\":\"0\",\"message\":\"接收成功\",\"devMessage\":\"\",\"data\":\"\"}";
+//        JSONObject root1 = JSON.parseObject(dsds);
+//        String form1 = root1.get("code").toString();
         var sql="select t1.phid,t1.bill_dt,t1.bill_no,t1.title,t2.pc_no phid_pc,t3.compno phid_reccomp,\n" +
                 "t3.compno phid_sencomp,t1.senemp,t1.phid_senemp,t1.cnt_sum_vat_fc,t1.signdt,\n" +
                 "t5.name cnt_type,t1.start_dt,t1.stat,t6.bill_no phid_parentid,t1.end_dt,\n" +
@@ -57,9 +78,44 @@ public class CntController {
                 "left join fg_fcur t11 on t11.phid=t1.curr_type\n" +
                 "left join hr_epm_main t12 on t12.phid=t1.phid_pm\n" +
                 "left join hr_epm_main t13 on t13.phid=t1.phid_pe\n" +
-                "left join bs_data t14 on t14.phid=t1.phid_ysfl and t14.oper_type = 'budget_classify'";
+                "left join bs_data t14 on t14.phid=t1.phid_ysfl and t14.oper_type = 'budget_classify'" +
+                "where  t1.cnt_type=5";
+//                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and t1.cnt_type=5";
         RowMapper<CntModel> rowMapper=new BeanPropertyRowMapper(CntModel.class);
         List<CntModel> cnts= jdbcTemplate.query(sql, rowMapper);
+        HttpPost httpPost  = new HttpPost(cntUrl);
+        httpPost.addHeader("Content-Type","application/json");
+        for (CntModel v:cnts) {
+            HttpEntity entity = new StringEntity(JSONObject.toJSONString(v),"utf-8");
+            httpPost.setEntity(entity);
+            CloseableHttpResponse response = null;
+            try {
+                response = httpClient.execute(httpPost);
+                StatusLine status = response.getStatusLine();
+                int state = status.getStatusCode();
+                if (state == HttpStatus.SC_OK) {
+                    HttpEntity responseEntity = response.getEntity();
+                    String jsonString = EntityUtils.toString(responseEntity);
+                    JSONObject root = JSON.parseObject(jsonString);
+                    String form = root.get("code").toString();
+                    if(form.equals("0"))
+                    {
+                        System.out.println("推送成功");
+                    }
+                    else
+                    {
+                        System.out.println("推送失败"+root.getJSONObject("message").toJSONString());
+                    }
+                } else {
+                    log.error("请求返回:" + state + "(" + cntUrl + ")");
+                }
+            }
+            catch (Exception e)
+            {
+                System.out.println("推送异常"+e.getMessage());
+            }
+        }
+//        jdbcTemplate.execute("update pcm3_cnt_m set user_tbjjsjk='1' where phid=");
         return  "测试成功";
     }
 }

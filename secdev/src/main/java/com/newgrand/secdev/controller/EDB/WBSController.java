@@ -2,6 +2,7 @@ package com.newgrand.secdev.controller.EDB;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.newgrand.secdev.config.IJdbcTemplate;
 import com.newgrand.secdev.domain.ApiType;
 import com.newgrand.secdev.domain.DataInfo;
 import com.newgrand.secdev.domain.EDB.*;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * WBS数据接收
@@ -40,7 +42,7 @@ public class WBSController {
 
     @Autowired
     @Resource(name = "jdbcTemplateOrcle")
-    protected JdbcTemplate jdbcTemplate;
+    protected IJdbcTemplate jdbcTemplate;
 
     @Autowired
     private I8Request i8Request;
@@ -50,19 +52,29 @@ public class WBSController {
     //对方是不是每次新增状态都是2,是否存在对方新增后没推送然后修改了,然后状态不是新增状态
     @ApiOperation(value = "接收WBS数据", notes = "接收WBS数据", produces = "application/json")
     @RequestMapping(value = "/syncWbs", method = RequestMethod.POST)
-    public EDBResultModel<ArrayList<EDBResultModel<String>>> syncWbs(@RequestBody WBSModel param) {
+    public EDBResultModel<String> syncWbs(@RequestBody WBSModel param) {
         log.info("接收WBS数据"+ JSONObject.toJSONString(param));
         System.out.println("接收WBS数据"+ JSONObject.toJSONString(param));
-        var result = new EDBResultModel<ArrayList<EDBResultModel<String>>>();
+        var result = new EDBResultModel<String>();
+        result.setCode("0");
+        result.setMessage("WBS接收成功");
         var data=new ArrayList<EDBResultModel<String>>();
         try {
             var pcId = jdbcTemplate.queryForObject("select phid from project_table where bill_no='" + param.getCode() + "'", String.class);
+            if(pcId==null)
+            {
+                result.setCode("1");
+                result.setMessage("项目不存在:"+param.getCode());
+                return result;
+            }
             var level1List = param.getProjectDXInfos();
             for (WBSLevel1Model level1 : level1List) {
                 DataInfo dataInfo = paramLevel(level1, pcId);
-                data.add(new EDBResultModel<String>(dataInfo.getStatus(), dataInfo.getErrorText(), "", level1.getId()));
+                if (dataInfo.getStatus().equals("1")) {
+                    result.setCode("1");
+                    result.setMessage(dataInfo.getErrorText());
+                }
             }
-            result.setData(data);
         } catch (Exception e) {
             result.setCode("1");
             result.setMessage(e.getMessage());
@@ -78,64 +90,79 @@ public class WBSController {
      */
     public DataInfo paramLevel(WBSLevel1Model model, String pcId){
         DataInfo rvInfo = new DataInfo();
-        long phid = -1;//用于新增初始化本级暂存id
-        long newPhid = -1;//用于确定新增和修改的最终数据
-        long level2Phid = 0;//初始化本级暂存id
-        long newLevel2Phid = 0;//用于确定新增和修改的最终数据
-        long level2ParentPhid = 0;//初始化末级暂存id
-        long level3Phid = 0;//初始化本级暂存id
-        long level3ParentPhid = 0;//初始化末级暂存id
+        Long minId=-1L;//最小值,用于新增
+        Long phid = -1L;//用于新增初始化本级暂存id
+//        Long newPhid = -1L;//用于确定新增和修改的最终数据
+        Long level2Phid = 0L;//初始化本级暂存id
+//        Long newLevel2Phid = 0L;//用于确定新增和修改的最终数据
+        Long level2ParentPhid = 0L;//初始化末级暂存id
+        Long level3Phid = 0L;//初始化本级暂存id
+        Long level3ParentPhid = 0L;//初始化末级暂存id
         ArrayList<Map<String, Object>> allRow = new ArrayList<>();
         var level2List= model.getProjectDWInfos();
         var isLeaf=level2List==null||level2List.size()==0?true:false;
-        if(model.getStatus().equals("2")) {//新增
-            newPhid = phid;
-            Map<String, Object> newRow1 = paramProcess(model.getId(), model.getName(), pcId, phid, 0, "1", isLeaf);
-            allRow.add(newRow1);
-        }
-        else {
-            newPhid =jdbcTemplate.queryForObject("select phid  from bd_wbs where wbs_realcode='"+model.getId()+"' and  pcid=" + pcId, Long.class);
-        }
-        level2ParentPhid=newPhid;//二级时需要把一级的phid赋值给父级
-        level2Phid=phid;
+
+        phid =jdbcTemplate.queryForObject("select phid  from bd_wbs where wbs_realcode='"+model.getId()+"' and  pcid=" + pcId, Long.class);
+        if(phid==null)
+            phid=minId;
+        Map<String, Object> newRow1 = paramProcess(model.getId(), model.getName(), pcId, phid, 0L, "1", isLeaf);
+        allRow.add(newRow1);
+
+        level2ParentPhid=phid;//二级时需要把一级的phid赋值给父级
         for (WBSLevel2Model level2:level2List)
         {
-            //每次循环生成新的id 循环过三层后最新的id是level3Phid
-            if(level2Phid>level3Phid)
-                level2Phid=level3Phid-1;
-            else
-                level2Phid=level2Phid-1;
             var level3List= level2.getBqItemFBInfos();
             if(level3List==null)
                 level3List=level2.getMeasureFBInfos();
             else
                 level3List.addAll(level2.getMeasureFBInfos());
             isLeaf=level3List==null||level3List.size()==0?true:false;
-            if(level2.getStatus().equals("2")) {
-                //新增
-                newLevel2Phid = phid;
-                Map<String, Object> newRow2 = paramProcess(level2.getId(),level2.getName(),pcId,level2Phid,level2ParentPhid,"2",isLeaf);
-                allRow.add(newRow2);
+
+            level2Phid = jdbcTemplate.queryForObject("select phid  from bd_wbs where wbs_realcode='" + level2.getId() + "' and pcid=" + pcId, Long.class);
+            if(level2Phid==null) {
+                minId--;
+                level2Phid = minId;
             }
-            else {
-                newLevel2Phid = jdbcTemplate.queryForObject("select phid  from bd_wbs where wbs_realcode='" + level2.getId() + "' and pcid=" + pcId, Long.class);
-            }
-            level3ParentPhid=newLevel2Phid;//二级时需要把一级的phid赋值给父级
-            level3Phid=level2Phid;
+            Map<String, Object> newRow2 = paramProcess(level2.getId(),level2.getName(),pcId,level2Phid,level2ParentPhid,"2",isLeaf);
+            allRow.add(newRow2);
+
+            level3ParentPhid=level2Phid;//二级时需要把一级的phid赋值给父级
             for (WBSLevel3Model level3:level3List)
             {
-                level3Phid-=1;//每次循环生成新的id
-                isLeaf=true;
-                if(level3.getStatus().equals("2")) {//新增
-                    Map<String, Object> newRow3 = paramProcess(level3.getId(), level3.getName(), pcId, level3Phid, level3ParentPhid, "3", isLeaf);
-                    allRow.add(newRow3);
+                level3Phid = jdbcTemplate.queryForObject("select phid  from bd_wbs where wbs_realcode='" + level3.getId() + "' and pcid=" + pcId, Long.class);
+                if(level3Phid==null)
+                {
+                    minId--;
+                    level3Phid=minId;
                 }
+                isLeaf=true;
+                Map<String, Object> newRow3 = paramProcess(level3.getId(), level3.getName(), pcId, level3Phid, level3ParentPhid, "3", isLeaf);
+                allRow.add(newRow3);
             }
         }
 //        ((Map<String,Object>)allRow.get(0).get("row")).put("isFirst", true);//第一个
 //        ((Map<String,Object>)allRow.get(allRow.size() - 1)).put("isLast", true);//倒数第一个
+        for(Map<String, Object> v :allRow)
+        {
+            var s=((Map<String, Object>)v.get("row")).get("PhId")==null;
+            var ss=((Map<String, Object>)v.get("row")).get("PhId").toString().equals("");
+            var ssss=Long.parseLong(((Map<String, Object>)v.get("row")).get("PhId").toString())<0;
+        }
+        ArrayList<Map<String, Object>> newRow= (ArrayList<Map<String, Object>>) allRow.stream().filter(f->((Map<String, Object>)f.get("row")).get("PhId")==null||((Map<String, Object>)f.get("row")).get("PhId").toString().equals("")|| Long.parseLong(((Map<String, Object>)f.get("row")).get("PhId").toString())<0).collect(Collectors.toList());
+        ArrayList<Map<String, Object>> modifyRow= (ArrayList<Map<String, Object>>) allRow.stream().filter(f->((Map<String, Object>)f.get("row")).get("PhId")!=null&&!((Map<String, Object>)f.get("row")).get("PhId").toString().equals("")&& Long.parseLong(((Map<String, Object>)f.get("row")).get("PhId").toString())>0).collect(Collectors.toList());
+        StringBuilder saveData=new StringBuilder();
+        saveData.append("{\"table\":{\"key\":\"phid\"");
+        if(newRow.size()>0)
+        {
+            saveData.append(",\"newRow\":"+JSONObject.toJSONString(newRow));
+        }
+        if(modifyRow.size()>0)
+        {
+            saveData.append(",\"modifiedRow\":"+JSONObject.toJSONString(modifyRow));
+        }
+        saveData.append("},\"isChanged\":true}");
         List<NameValuePair> urlParameters = new ArrayList<>();
-        urlParameters.add(new BasicNameValuePair("savedata", "{\"table\":{\"key\":\"phid\",\"newRow\":"+JSONObject.toJSONString(allRow)+"},\"isChanged\":true}"));
+        urlParameters.add(new BasicNameValuePair("savedata", saveData.toString()));
         urlParameters.add(new BasicNameValuePair("wbscbsdata", "{\"table\":{\"key\":\"PhId\"}}"));
         try {
             if(allRow.size()==0)
@@ -174,7 +201,7 @@ public class WBSController {
      * @param leaf 是否是叶子节点
      * @return
      */
-    public Map<String, Object> paramProcess(String wbsCode,String wbsName, String pcId,long phid,long parentPhid,
+    public Map<String, Object> paramProcess(String wbsCode,String wbsName, String pcId,Long phid,Long parentPhid,
                                             String depth,boolean leaf) {
         Map<String, Object> newRow = new HashMap<>();
         Map<String, Object> row = new HashMap<>();
@@ -255,7 +282,13 @@ public class WBSController {
         row.put("qtitle", "");
         row.put("qshowDelay", 0);
         row.put("children", null);
-        row.put("key", null);
+        row.put("key", "");
+        if(phid>0)
+        {
+            row.put("key", phid);
+            var ngRecordVer=jdbcTemplate.queryForObject("select ng_record_ver  from bd_wbs where wbs_realcode='" + wbsCode + "' and pcid=" + pcId, String.class);
+            row.put("NgRecordVer", ngRecordVer);
+        }
         newRow.put("row", row);
         return newRow;
     }

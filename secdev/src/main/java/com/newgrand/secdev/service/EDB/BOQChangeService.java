@@ -15,18 +15,21 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.management.StringValueExp;
-import java.security.cert.CollectionCertStoreParameters;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * BOQ 清单保存
+ * BOQ 清单变更保存
  * @Author ChenXiangLu
  * @Date 2020/11/28 17:28
  * @Version 1.0
@@ -34,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class BOQService {
+public class BOQChangeService {
     /**
      * 模拟登录的用户
      */
@@ -78,9 +81,9 @@ public class BOQService {
     @Autowired
     private I8Request i8Request;
 
-    private String billStr="{\"PhidPc\":\"\",\"user_xmbm\":\"\",\"PhidCblx\":\"\",\"HisVersion\":\"\",\"ChkFlg\":\"\",\"ProjectCost\":\"\",\"user_gczjje\":0,\"PlannedCost\":0,\"user_jhcbje\":0,\"user_sl\":0,\"user_se\":0,\"user_bzrq\":\"\",\"user_jbr\":\"0\",\"user_jbbm\":\"0\",\"user_zdr\":\"0\",\"user_zdrq\":\"\",\"Version\":\"0\",\"IsWbs\":\"2\",\"IsLock\":\"\",\"BillNo\":\"0\",\"Sortrow\":\"0\",\"AppStatus\":\"\",\"WfFlg\":\"\",\"PhId\":\"\",\"NgInsertDt\":\"\",\"NgUpdateDt\":\"\",\"Creator\":\"\",\"Editor\":\"\",\"CurOrgId\":\"\",\"PhidChkpsn\":\"\",\"PhidSchemeId\":\"\",\"user_jjsjkurl\":\"\",\"PhidTask\":\"\",\"key\":\"\"}";
-    private String mStr="{\"id\":\"\",\"PhId\":\"\",\"Pphid\":\"\",\"NgInsertDt\":null,\"NgUpdateDt\":null,\"Creator\":\"\",\"Creator_EXName\":\"\",\"Editor\":\"\",\"Editor_EXName\":\"\",\"PhidPc\":\"\",\"PhidPc_EXName\":\"\",\"Code\":\"\",\"Cname\":\"\",\"Descript\":\"\",\"PhidWbs\":\"0\",\"PhidWbs_EXName\":\"\",\"PhidMsunit\":\"\",\"PhidMsunit_EXName\":\"\",\"PhidLevel\":\"\",\"PhidLevel_EXName\":\"\",\"MType\":1,\"IsCnt\":0,\"Expression\":\"\",\"PhidCbs\":\"\",\"PhidCbs_EXName\":\"\",\"Rate\":0,\"Remarks\":\"\",\"Qty\":0,\"Prc\":0,\"Amt\":0,\"AppStatus\":\"\",\"Cblx\":\"\",\"IsSummed\":\"0\",\"Sortrow\":0,\"BoqidUniq\":\"\",\"Version\":\"\",\"Ftype\":\"\",\"Parentphid\":\"0\",\"IsRel\":0,\"PhidUnitPc\":\"0\",\"PhidIndiPc\":\"0\",\"Approval\":\"0\",\"CbsQdId\":\"\",\"Bidding\":\"\",\"WriteSelf\":\"\",\"Reply\":\"\",\"ContractIncome\":\"\",\"PlanCost\":\"\",\"PhidVisa\":\"\",\"PhidVisa_EXName\":\"\",\"Color\":\"\",\"Import\":\"\",\"PcoRestQty\":0,\"PcoRestAmt\":0,\"PcoControlQty\":0,\"PcoControlAmt\":0,\"RestQty\":0,\"RestAmt\":0,\"ControlQty\":0,\"ControlAmt\":0,\"CntRestQty\":0,\"CntRestAmt\":0,\"CntControlQty\":0,\"CntControlAmt\":0,\"CntPayRestQty\":0,\"CntPayRestAmt\":0,\"CntPayControlQty\":0,\"CntPayControlAmt\":0,\"CzPlanRestQty\":0,\"CzPlanRestAmt\":0,\"IsChange\":0,\"SourceType\":0,\"PhidSource\":\"\",\"ImpInfo\":\"\",\"Nullify\":0,\"BoqmType\":2,\"OutExpress\":\"\",\"OutExpressRate\":\"\",\"ChangeTypeName\":\"\",\"OriQty\":0,\"CurrQty\":0,\"CurrChangeQty\":0,\"OriPrc\":0,\"CurrPrc\":0,\"CurrChangePrc\":0,\"OriAmt\":0,\"CurrAmt\":0,\"CurrChangeAmt\":0,\"Pms3BoqMPhid\":\"\",\"ChangeM\":0,\"ChangeM_EXName\":\"\",\"ChgData\":\"\",\"user_cbht_name\":\"\",\"user_djhs\":0,\"user_hjhs\":0,\"user_sjdj\":0,\"user_sjhj\":0,\"user_cbht\":\"\",\"user_sl\":0,\"user_jjsjk\":\"\",\"parentId\":\"root\",\"checked\":null,\"loading\":false,\"key\":null}";
-    private String gridStr="{\"PhId\":\"\",\"Pphid\":\"\",\"Ppphid\":\"\",\"SType\":0,\"IsCost\":\"1\",\"PhidCbs\":\"\",\"PhidCbs_EXName\":\"\",\"PhidItemid\":\"\",\"PhidItemid_EXName\":\"\",\"PhidRestype\":\"\",\"PhidResbs\":\"\",\"PhidResbs_EXName\":\"\",\"Code\":\"\",\"Cname\":\"\",\"RcjType\":\"\",\"Spec\":\"\",\"PhidMsunit\":\"\",\"PhidMsunit_EXName\":\"\",\"ResAlias\":\"\",\"Note\":\"\",\"Remarks\":\"\",\"Qty\":0,\"Prc\":0,\"Amt\":0,\"Totqty\":0,\"Totamt\":0,\"Ftype\":\"*\",\"MType\":1,\"Cblx\":\"\",\"PhidQuotaD\":\"\",\"PhidQuota\":\"\",\"PhidQuota_EXName\":\"\",\"PhidItemdetail\":\"\",\"ResPropertys\":\"\",\"PcoRestQty\":0,\"PcoRestAmt\":0,\"RestQty\":0,\"RestAmt\":0,\"CntRestQty\":0,\"CntRestAmt\":0,\"CntPayRestQty\":0,\"CntPayRestAmt\":0,\"IsFarmProduce\":0,\"PcoControlQty\":0,\"PcoControlAmt\":0,\"ControlQty\":0,\"ControlAmt\":0,\"CntControlQty\":0,\"CntControlAmt\":0,\"CntPayControlQty\":0,\"CntPayControlAmt\":0,\"CostRefFlg\":0,\"CzPlanRestQty\":0,\"CzPlanRestAmt\":0,\"LossRate\":0,\"PhidCbsNew\":\"\",\"CurrQty\":0,\"CurrChangeQty\":0,\"CurrPrc\":0,\"CurrChangePrc\":0,\"CurrAmt\":0,\"CurrChangeAmt\":0,\"CurrTotqty\":0,\"CurrChangeTotqty\":0,\"CurrTotamt\":0,\"CurrChangeTotamt\":0,\"Pms3BoqMPhid\":\"\",\"ChangeD\":0,\"PhidCbsNew_EXName\":\"\",\"BeforeLossRate\":0,\"OriPrc\":0,\"OriQty\":0,\"OriAmt\":0,\"OriTotqty\":0,\"OriTotamt\":0,\"OutSpecName\":\"\",\"OutMsunitName\":\"\",\"PhidPc\":\"\",\"PhidLevel\":\"\",\"PhidLevel_EXName\":\"\",\"MCname\":\"\",\"MCode\":\"\",\"MPhid\":\"\",\"PhidQuota_EXCode\":\"\",\"PhidWbs\":\"\",\"PhidWbs_EXName\":\"\",\"CbsQdId\":\"\",\"BoqDIsRel\":\"\",\"MDescript\":\"\",\"user_djhs\":0,\"user_hjhs\":0,\"user_sjdj\":0,\"user_sjhj\":0,\"user_jjsjk\":\"\",\"user_sl\":0,\"key\":null}";
+    private String billStr="{\"PhidPc\":\"\",\"PhidCblx\":\"\",\"ChangeType\":1,\"BefortAmt\":0,\"CurrentAmt\":0,\"AfterAmt\":0,\"BillCode\":\"\",\"Description\":\"\",\"BillDt\":\"2020-12-21 11:05:48\",\"Creator_EXName\":\"\",\"ChangeNo\":\"\",\"Remarks\":\"\",\"Version\":\"0\",\"IsWbs\":\"2\",\"ChkFlg\":\"\",\"IsLock\":\"\",\"AppStatus\":\"\",\"BillNo\":\"\",\"Title\":\"11\",\"AsrFlg\":\"\",\"WfFlg\":\"\",\"DaFlg\":\"\",\"ChkDt\":\"\",\"PhidOcode\":\"\",\"LevelCode\":\"0\",\"PrintCount\":0,\"BillType\":\"\",\"UserType\":\"\",\"PhId\":\"\",\"NgInsertDt\":\"2020-12-21 11:05:48\",\"NgUpdateDt\":\"2020-12-21 11:06:47\",\"Creator\":\"\",\"Editor\":\"\",\"CurOrgId\":\"\",\"PhidChkpsn\":\"0\",\"PhidSchemeId\":\"0\",\"ChangeBill\":\"1\",\"Pms3BoqBillPhid\":\"\",\"PhidTask\":\"\",\"key\":\"\"}";
+    private String mStr="{\"id\":\"\",\"PhId\":\"\",\"Pphid\":\"\",\"NgInsertDt\":\"2020-12-21 11:05:48\",\"NgUpdateDt\":\"2020-12-21 11:05:48\",\"Creator\":\"\",\"Creator_EXName\":\"\",\"Editor\":\"\",\"Editor_EXName\":\"\",\"PhidPc\":\"\",\"PhidPc_EXName\":\"\",\"Code\":\"\",\"Cname\":\"\",\"Descript\":\"\",\"PhidWbs\":\"\",\"PhidWbs_EXName\":\"\",\"PhidMsunit\":\"\",\"PhidMsunit_EXName\":\"\",\"PhidLevel\":\"0\",\"PhidLevel_EXName\":\"\",\"MType\":1,\"IsCnt\":0,\"Expression\":\"\",\"PhidCbs\":\"0\",\"PhidCbs_EXName\":\"\",\"Rate\":0,\"Remarks\":\"\",\"Qty\":0,\"Prc\":0,\"Amt\":0,\"AppStatus\":\"\",\"Cblx\":\"\",\"IsSummed\":\"0\",\"Sortrow\":1,\"BoqidUniq\":\"\",\"Version\":\"\",\"Ftype\":\"*\",\"Parentphid\":\"0\",\"IsRel\":0,\"PhidUnitPc\":\"0\",\"PhidIndiPc\":\"0\",\"Approval\":\"0\",\"CbsQdId\":\"\",\"Bidding\":\"\",\"WriteSelf\":\"\",\"Reply\":\"\",\"ContractIncome\":\"0\",\"PlanCost\":\"0\",\"PhidVisa\":\"0\",\"PhidVisa_EXName\":\"\",\"Color\":\"0\",\"Import\":\"0\",\"PcoRestQty\":0,\"PcoRestAmt\":0,\"PcoControlQty\":0,\"PcoControlAmt\":0,\"RestQty\":0,\"RestAmt\":0,\"ControlQty\":0,\"ControlAmt\":0,\"CntRestQty\":0,\"CntRestAmt\":0,\"CntControlQty\":0,\"CntControlAmt\":0,\"CntPayRestQty\":0,\"CntPayRestAmt\":0,\"CntPayControlQty\":0,\"CntPayControlAmt\":0,\"IsColor\":\"\",\"CzPlanRestQty\":0,\"CzPlanRestAmt\":0,\"SourceType\":0,\"PhidSource\":\"0\",\"ImpInfo\":\"\",\"OriQty\":0,\"CurrQty\":0,\"CurrChangeQty\":0,\"OriPrc\":0,\"CurrPrc\":0,\"CurrChangePrc\":0,\"OriAmt\":0,\"CurrAmt\":0,\"CurrChangeAmt\":0,\"Pms3BoqMPhid\":\"0\",\"ChangeM\":1,\"ChangeM_EXName\":\"\",\"ChgData\":\"\",\"BoqmType\":2,\"OutExpress\":\"\",\"OutExpressRate\":\"\",\"ChangeTypeName\":\"\",\"user_cbht_name\":\"\",\"user_djhs\":0,\"user_hjhs\":0,\"user_sjdj\":0,\"user_sjhj\":0,\"user_cbht\":\"\",\"user_jjsjk\":\"\",\"parentId\":\"root\",\"checked\":null,\"loading\":false,\"key\":\"\"}";
+    private String gridStr="{\"PhId\":\"0\",\"Pphid\":\"\",\"Ppphid\":\"0\",\"SType\":0,\"IsCost\":\"0\",\"PhidCbs\":\"0\",\"PhidCbs_EXName\":\"\",\"PhidItemid\":\"\",\"PhidItemid_EXName\":\"\",\"PhidRestype\":\"0\",\"PhidResbs\":\"\",\"PhidResbs_EXName\":\"\",\"Code\":\"\",\"Cname\":\"\",\"RcjType\":\"\",\"Spec\":\"\",\"PhidMsunit\":\"\",\"PhidMsunit_EXName\":\"\",\"ResAlias\":\"\",\"Note\":\"\",\"Remarks\":\"\",\"Qty\":0,\"Prc\":0,\"Amt\":0,\"Totqty\":0,\"Totamt\":0,\"Ftype\":\"*\",\"MType\":1,\"Cblx\":\"\",\"PhidQuotaD\":\"0\",\"PhidQuota\":\"0\",\"PhidQuota_EXName\":\"\",\"PhidItemdetail\":\"\",\"ResPropertys\":\"\",\"PcoRestQty\":0,\"PcoRestAmt\":0,\"RestQty\":0,\"RestAmt\":0,\"CntRestQty\":0,\"CntRestAmt\":0,\"CntPayRestQty\":0,\"CntPayRestAmt\":0,\"IsFarmProduce\":0,\"PcoControlQty\":0,\"PcoControlAmt\":0,\"ControlQty\":0,\"ControlAmt\":0,\"CntControlQty\":0,\"CntControlAmt\":0,\"CntPayControlQty\":0,\"CntPayControlAmt\":0,\"CostRefFlg\":0,\"CzPlanRestQty\":0,\"CzPlanRestAmt\":0,\"LossRate\":0,\"PhidCbsNew\":\"0\",\"CurrQty\":0,\"CurrChangeQty\":0,\"CurrPrc\":0,\"CurrChangePrc\":0,\"CurrAmt\":0,\"CurrChangeAmt\":0,\"CurrTotqty\":0,\"CurrChangeTotqty\":0,\"CurrTotamt\":0,\"CurrChangeTotamt\":0,\"Pms3BoqMPhid\":\"0\",\"ChangeD\":2,\"PhidCbsNew_EXName\":\"\",\"BeforeLossRate\":0,\"OriPrc\":0,\"OriQty\":0,\"OriAmt\":0,\"OriTotqty\":0,\"OriTotamt\":0,\"OutSpecName\":\"\",\"OutMsunitName\":\"\",\"PhidPc\":\"0\",\"PhidLevel\":\"0\",\"PhidLevel_EXName\":\"\",\"MCname\":\"\",\"MCode\":\"\",\"MPhid\":\"0\",\"PhidQuota_EXCode\":\"\",\"PhidWbs\":\"0\",\"PhidWbs_EXName\":\"\",\"CbsQdId\":\"0\",\"BoqDIsRel\":\"0\",\"MDescript\":\"\",\"user_djhs\":0,\"user_hjhs\":0,\"user_sjdj\":0,\"user_sjhj\":0,\"user_jjsjk\":\"\",\"user_sl\":0,\"key\":null}";
 
     /**
      * 同步BOQ
@@ -88,9 +91,22 @@ public class BOQService {
      * @param isCost true表示是成本,需要添加表体明细
      * @return
      */
-    public DataInfo saveBoqCost(BOQModel param,boolean isCost)
+    public DataInfo saveBoqCostChg(BOQModel param,boolean isCost)
     {
-        String yuflName=isCost?"成本清单":"收入清单";
+        //region 排除未变更的数据  清单项变更就是变更,不需要考虑到费用项级别
+        //分部分项
+        param.setBQItemInfos(param.getBQItemInfos().stream().filter(f->!f.getStatus().equals("0"))
+                .collect(Collectors.toCollection(ArrayList::new)));
+        //单价措施费
+        param.setMeasureItemInfos(param.getMeasureItemInfos().stream().filter(f->!f.getStatus().equals("0"))
+                .collect(Collectors.toCollection(ArrayList::new)));
+        //其他
+        param.setOtherItemInfos(param.getOtherItemInfos().stream().filter(f->!f.getStatus().equals("0"))
+                .collect(Collectors.toCollection(ArrayList::new)));
+        //因为税费没有清单项,税费默认都是更改
+        //endregion
+
+        String yuflName=isCost?"成本清单变更":"收入清单变更";
         String ysfl=isCost?boqysflCost:boqysflIn;
         DataInfo rvInfo = new DataInfo();
         //判断项目是否存在
@@ -102,17 +118,11 @@ public class BOQService {
             rvInfo.setErrorText("项目不存在:"+param.getCode());
             return rvInfo;
         }
+        var oldPhid=jdbcTemplate.queryForObject("select phid from pms3_boq_bill where change_bill !=1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, Long.class);
 
         //判断是不是已审核或者走工作流(收入清单不走工作流) change_bill=1表示变更
-        var chkflg = jdbcTemplate.queryForObject("select chk_flg from pms3_boq_bill where change_bill!=1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, String.class);
-        if(chkflg!=null&&chkflg.equals("1"))
-        {
-            rvInfo.setErrorText(yuflName+"单据已审核,请取消审核后再进行同步");
-            rvInfo.setStatus("400");
-            rvInfo.setCode(param.getCode());
-            return rvInfo;
-        }
-        var wfflg = jdbcTemplate.queryForObject("select wf_flg from pms3_boq_bill where change_bill!=1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, String.class);
+        //变更如果是已审核直接新增,此处不需要做判断
+        var wfflg = jdbcTemplate.queryForObject("select wf_flg from pms3_boq_bill where wf_flg=1 and change_bill =1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, String.class);
         if(wfflg!=null&&wfflg.equals("1"))//在走工作流
         {
             rvInfo.setErrorText(yuflName+"单据已经申请工作流,不进行同步");
@@ -145,18 +155,18 @@ public class BOQService {
         }
         //判断CBS是否存在
         ArrayList<String> cbsCodes=new ArrayList<>();
-        cbsCodes.addAll(param.getFeeItemInfos().stream().map(m->m.getCourseCode()).distinct().collect(Collectors.toList()));
+        cbsCodes.addAll(param.getFeeItemInfos().stream().map(m->m.getCourseCode()).collect(Collectors.toList()));
         param.getBQItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
+//                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                     cbsCodes.add(ff.getCourseCode());
                 }));
         param.getMeasureItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
+//                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                         cbsCodes.add(ff.getCourseCode());
                 }));
@@ -228,14 +238,14 @@ public class BOQService {
                     if(!resBsCodes.contains(ff.getMaterialCode()))
                         resBsCodes.add(ff.getMaterialCode());
                 }));
-        List<Map<String, Object>> resBsPhids=jdbcTemplate.queryForList("select phid,code,name from res_bs  where  code in ('"+ StringUtils.join(resBsCodes,"','")+"')");
+        List<Map<String, Object>> resBsPhids=jdbcTemplate.queryForList("select phid,code,name from res_bs  where pcid="+pcPhid+" and code in ('"+ StringUtils.join(resBsCodes,"','")+"')");
 
 
         //endregion
         
         List<NameValuePair> urlParameters = new ArrayList<>();
-        Map<String, ArrayList<Map<String, Object>>> allData=paramBoqCost(param,isCost,ysfl,pcPhid,
-                wbsPhids,cbsPhids,msunitPhids,resBsPhids);
+        Map<String, ArrayList<Map<String, Object>>> allData=paramBoqCostChg(param,isCost,ysfl,pcPhid,wbsPhids,cbsPhids,
+                msunitPhids,oldPhid,resBsPhids);
         ArrayList<Map<String, Object>> mstformDatas=allData.get("MstformData");
         ArrayList<Map<String, Object>> boqmtreeDataFBs=allData.get("boqmtreeDataFB");
         ArrayList<Map<String, Object>> boqdgridDataFBs=allData.get("boqdgridDataFB");
@@ -368,15 +378,14 @@ public class BOQService {
         urlParameters.add(new BasicNameValuePair("boqdgridDataFB", fbGridStr.toString()));
         urlParameters.add(new BasicNameValuePair("boqdgridDataDJ", djGridStr.toString()));
         urlParameters.add(new BasicNameValuePair("boqdgridDataQT", qtGridStr.toString()));
-//        urlParameters.add(new BasicNameValuePair("boqdgridDataFB", "{\"table\":{\"key\":\"PhId\"}}"));
-//        urlParameters.add(new BasicNameValuePair("boqdgridDataDJ", "{\"table\":{\"key\":\"PhId\"}}"));
-//        urlParameters.add(new BasicNameValuePair("boqdgridDataQT", "{\"table\":{\"key\":\"PhId\"}}"));
         urlParameters.add(new BasicNameValuePair("boqmrelwbs", "[]"));
+        urlParameters.add(new BasicNameValuePair("oldphid", oldPhid.toString()));
+        urlParameters.add(new BasicNameValuePair("boqbill","1"));
         urlParameters.add(new BasicNameValuePair("isContinue", "false"));
         urlParameters.add(new BasicNameValuePair("attchmentGuid", "0"));
         try {
                 log.info("BOQ参数:"+JSONObject.toJSONString(urlParameters));
-                String i8rv = i8Request.PostFormSync("/PMS/PCO/BOQEQ/BoqBill/save", urlParameters);
+                String i8rv = i8Request.PostFormSync("/PMS/PCO/BOQEQ/BoqBill/SaveChg", urlParameters);
                 JSONObject i8rvJson = JSON.parseObject(i8rv);
                 if (i8rvJson != null && i8rvJson.getString("Status").toLowerCase().equals("success")) {
                     rvInfo.setStatus("0");
@@ -401,11 +410,11 @@ public class BOQService {
      * @param isCost true表示是成本,需要添加表体明细
      * @return
      */
-    public Map<String, ArrayList<Map<String, Object>>> paramBoqCost(BOQModel param,boolean isCost,String ysfl,
+    public Map<String, ArrayList<Map<String, Object>>> paramBoqCostChg(BOQModel param,boolean isCost,String ysfl,
                                                                     String pcPhid,List<Map<String, Object>> wbsPhids,
                                                                     List<Map<String, Object>> cbsPhids,
                                                                     List<Map<String, Object>> msunitPhids,
-                                                                    List<Map<String, Object>> resBsPhids)
+                                                                    Long oldPhid,List<Map<String, Object>> resBsPhids)
     {
         Map<String, ArrayList< Map<String, Object>>> result=new HashMap<>();
 
@@ -416,12 +425,71 @@ public class BOQService {
         Long level3Phid = 0L;//初始化本级暂存id
         Long level3ParentPhid = 0L;//初始化末级暂存id
 
-        phid = jdbcTemplate.queryForObject("select phid from pms3_boq_bill where change_bill!=1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, Long.class);
+        phid = jdbcTemplate.queryForObject("select phid from pms3_boq_bill where change_bill =1 and wf_flg!=1 and chk_flg !=1 and phid_pc=" + pcPhid + " and phid_cblx="+ysfl, Long.class);
         if(phid==null)
             phid = minPhid;
 
+        //region  查询计算表头数据 清单的经济数据库id  用于查询变更前总价
+        var QDjjsjkids=new ArrayList<String>();
+        QDjjsjkids.addAll(param.getBQItemInfos().stream().map(m->m.getId()).collect(Collectors.toList()));
+        QDjjsjkids.addAll(param.getMeasureItemInfos().stream().map(m->m.getId()).collect(Collectors.toList()));
+        QDjjsjkids.addAll(param.getOtherItemInfos().stream().map(m->m.getId()).collect(Collectors.toList()));
+        QDjjsjkids.add("xzd_9999");
+        //变更前值
+        var befortAmt=jdbcTemplate.queryForObject("select sum(curramt) from pms3_boq_m where pphid="+oldPhid+" and phid in (" +
+                "select distinct phid from pms3_boq_m where change_bill!=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')\n" +
+                "union \n" +
+                "select distinct pms3_boq_m_phid from pms3_boq_m where change_bill=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')", Double.class);
+        //变更后值
+        double afterAmt= 0;
+        afterAmt+=param.getBQItemInfos().stream().mapToDouble(f -> Double.parseDouble(f.getTotal())).sum();
+        afterAmt+=param.getMeasureItemInfos().stream().mapToDouble(f -> Double.parseDouble(f.getTotal())).sum();
+        afterAmt+=param.getOtherItemInfos().stream().mapToDouble(f -> Double.parseDouble(f.getTotal())).sum();
+        //变更值
+        double currentAmt=afterAmt-befortAmt;
+
+        //endregion
+
+        //region 查询清单信息
+
+        RowMapper<BOQChangeMModel> rowMapper=new BeanPropertyRowMapper(BOQChangeMModel.class);
+        List<BOQChangeMModel> oldValuesM=jdbcTemplate.query("select distinct user_jjsjk jjsjk,ori_qty oriQty,\n" +
+                "curr_qty currqty,ori_prc oriprc,curr_prc currprc,ori_amt oriamt,curr_amt curramt,phid oldphid\n" +
+                "from pms3_boq_m where user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')\n" +
+                "or phid in (\n" +
+                "select distinct pms3_boq_m_phid from pms3_boq_m where change_m=1 and  user_jjsjk \n" +
+                "in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"'))",rowMapper);
+
+        //endregion
+
+        //region 查询费用项信息
+        var Feejjsjkids=new ArrayList<String>();
+        Feejjsjkids.addAll(param.getFeeItemInfos().stream().map(m->m.getId()).collect(Collectors.toList()));
+        param.getBQItemInfos().stream().map(m->m.getFeeItemInfos())
+                .forEach(f->f.forEach(ff->
+                {
+                    ff.setUnit("m");//测试使用,测试时对方你未维护该字段,后期取消该默认值
+                    if(!Feejjsjkids.contains(ff.getId()))
+                        Feejjsjkids.add(ff.getId());
+                }));
+        param.getMeasureItemInfos().stream().map(m->m.getFeeItemInfos())
+                .forEach(f->f.forEach(ff->
+                {
+                    ff.setUnit("m");//测试使用,测试时对方你未维护该字段,后期取消该默认值
+                    if(!Feejjsjkids.contains(ff.getId()))
+                        Feejjsjkids.add(ff.getId());
+                }));
+
+        List<BOQChangeDModel> oldValuesD=jdbcTemplate.query("select distinct user_jjsjk jjsjk,qty oriQty,\n" +
+                "amt oriPrc,totamt oriamt,totqty oriTotQty,totamt oriTotAmt,phid oldphid\n" +
+                "from pms3_boq_d where user_jjsjk in ('"+StringUtils.join(Feejjsjkids.toArray(),"','")+"')\n" +
+                "or phid in (\n" +
+                "select distinct pms3_boq_m_phid from pms3_boq_d where change_d=1 and  user_jjsjk " +
+                "in ('"+StringUtils.join(Feejjsjkids.toArray(),"','")+"'))",new BeanPropertyRowMapper(BOQChangeDModel.class));
+        //endregion
+
         ArrayList<Map<String, Object>> MstformData=new ArrayList<>();
-        MstformData.add(paramMstformData(pcPhid,phid,ysfl,param.getUrl(),param.getUserCode()));
+        MstformData.add(paramMstformDataChg(pcPhid,phid,ysfl,param.getUrl(),param.getUserCode(),oldPhid,befortAmt,currentAmt,afterAmt));
 
         ArrayList<Map<String, Object>> boqmtreeDataFBs=new ArrayList<>();
         ArrayList<Map<String, Object>> boqdgridDataFBs=new ArrayList<>();
@@ -429,7 +497,7 @@ public class BOQService {
         ArrayList<Map<String, Object>> boqdgridDataDJs=new ArrayList<>();
         ArrayList<Map<String, Object>> boqmtreeDataQTs=new ArrayList<>();
         ArrayList<Map<String, Object>> boqdgridDataQTs=new ArrayList<>();
-//        ArrayList<Map<String, Object>> boqmtreeDataGFs=new ArrayList<>();
+
         level2ParentPhid=phid;
         for(BOQBQModel v :param.getBQItemInfos()) {
             minPhid--;
@@ -437,7 +505,9 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataFB(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals(v.getId())).collect(Collectors.toList());
+            BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
+            temp=boqmtreeDataFBChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
             boqmtreeDataFBs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -447,7 +517,10 @@ public class BOQService {
                     if (level3Phid==null)
                         level3Phid=minPhid;
                     Map<String, Object> tempFee = new HashMap<>();
-                    tempFee = boqdgridDataFB(f, level3Phid, level3ParentPhid,cbsPhids,msunitPhids,resBsPhids);
+                    var tempOldValueD=oldValuesD.stream().filter(d->d.getJjsjk().equals(f.getId())).collect(Collectors.toList());
+                    BOQChangeDModel oldValueD=tempOldValueD==null||tempOldValueD.size()==0? null:tempOldValueD.get(0);
+                    tempFee = boqdgridDataFBChg(f, level3Phid, level3ParentPhid,cbsPhids,msunitPhids,oldValueD,
+                            v.getQuantity(),resBsPhids);
                     boqdgridDataFBs.add(tempFee);
                 }
             }
@@ -458,7 +531,9 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataDJ(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals(v.getId())).collect(Collectors.toList());
+            BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
+            temp=boqmtreeDataDJChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
             boqmtreeDataDJs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -468,7 +543,10 @@ public class BOQService {
                     if (level3Phid==null)
                         level3Phid = minPhid;
                     Map<String, Object> tempFee = new HashMap<>();
-                    tempFee = boqdgridDataDJ(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,resBsPhids);
+                    var tempOldValueD=oldValuesD.stream().filter(d->d.getJjsjk().equals(f.getId())).collect(Collectors.toList());
+                    BOQChangeDModel oldValueD=tempOldValueD==null||tempOldValueD.size()==0? null:tempOldValueD.get(0);
+                    tempFee = boqdgridDataDJChg(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,oldValueD,
+                            v.getQuantity(),resBsPhids);
                     boqdgridDataDJs.add(tempFee);
                 }
             }
@@ -479,16 +557,19 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataQT(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals(v.getId())).collect(Collectors.toList());
+            BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
+            temp=boqmtreeDataQTChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
             boqmtreeDataQTs.add(temp);
         }
         if(isCost) {//如果是成本清单,需要将规费税金同步到其他费用里面,并且在清单项中添加一个固定的清单项
             String total=String.valueOf(param.getFeeItemInfos().stream().mapToDouble(m->Double.parseDouble(m.getTaxTotal())).sum());
+            String tolQty=String.valueOf(param.getFeeItemInfos().stream().mapToDouble(m->Double.parseDouble(m.getQuantity())).sum());
             BOQOtherModel tempOther=new BOQOtherModel();
             tempOther.setCode("9999");
             tempOther.setBidNodeID("");
             tempOther.setContractCode("");
-            tempOther.setId("");
+            tempOther.setId("xzd_9999");
             tempOther.setName("其他费用项");
             tempOther.setUnit("m");
             tempOther.setTotal(total);
@@ -498,7 +579,9 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataQT(tempOther,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals("xzd_9999")).collect(Collectors.toList());
+            BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
+            temp=boqmtreeDataQTChg(tempOther,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
             boqmtreeDataQTs.add(temp);
             level3ParentPhid=level2Phid;
             for (BOQFeeModel f : param.getFeeItemInfos()) {
@@ -507,19 +590,11 @@ public class BOQService {
                 if (level3Phid==null)
                     level3Phid = minPhid;
                 Map<String, Object> tempFee = new HashMap<>();
-                tempFee = boqdgridDataQT(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,resBsPhids);
+                var tempOldValueD=oldValuesD.stream().filter(d->d.getJjsjk().equals(f.getId())).collect(Collectors.toList());
+                BOQChangeDModel oldValueD=tempOldValueD==null||tempOldValueD.size()==0? null:tempOldValueD.get(0);
+                tempFee = boqdgridDataQTChg(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,oldValueD,tolQty,resBsPhids);
                 boqdgridDataQTs.add(tempFee);
             }
-//            for (BOQFeeModel v : param.getFeeItemInfos()) {
-//                minPhid = minPhid - 1;
-//                level2Phid = minPhid;
-//                Long isExist = jdbcTemplate.queryForObject("select phid from pms3_boq_m where phid_pc=" + pcPhid + " and code='" + v.getCode() + "'", Long.class);
-//                if (isExist > 0)
-//                    level2Phid = isExist;
-//                Map<String, Object> temp = new HashMap<>();
-//                temp = boqmtreeDataGF(v, level2Phid, level2ParentPhid);
-//                boqmtreeDataGFs.add(temp);
-//            }
         }
 
         result.put("MstformData", MstformData);
@@ -529,7 +604,6 @@ public class BOQService {
         result.put("boqdgridDataDJ",boqdgridDataDJs);
         result.put("boqmtreeDataQT",boqmtreeDataQTs);
         result.put("boqdgridDataQT",boqdgridDataQTs);
-//        result.put("boqmtreeDataGF",boqmtreeDataGFs);
         return result;
     }
 
@@ -538,51 +612,30 @@ public class BOQService {
      * @param pcPhid 项目phid
      * @return
      */
-    public Map<String, Object> paramMstformData(String pcPhid,Long phid,String ysfl,String url,String userCode) {
+    public Map<String, Object> paramMstformDataChg(String pcPhid,Long phid,String ysfl,String url,String userCode,
+                                                Long oldPhid,Double befortAmt,Double currentAmt,Double AfterAmt) {
         String org=jdbcTemplate.queryForObject("select cat_phid from project_table where phid="+pcPhid,String.class);
-        String userId=jdbcTemplate.queryForObject("select phid from fg3_user where userno='"+i8user+"'",String.class);
         String zdrId=jdbcTemplate.queryForObject("select phid from hr_epm_main where cno='"+userCode+"'",String.class);
-        String zdrDept=jdbcTemplate.queryForObject("select dept from hr_epm_main where cno='"+userCode+"'",String.class);
 
         String insertDt=DateTranslate.getDateAsString(LocalDateTime.now(),"yyyy-MM-dd HH:mm:ss");
         HashMap<String, Object> row = new HashMap<>();
-        row.put("user_jbr", zdrId);
-        row.put("user_jbbm", zdrDept);
-        row.put("user_zdr", zdrId);
-        row.put("user_zdrq", insertDt);
-        row.put("user_bzrq", insertDt);
+        row.put("BefortAmt",  befortAmt);
+        row.put("CurrentAmt", currentAmt );
+        row.put("AfterAmt", AfterAmt );
         row.put("PhidPc", pcPhid);
         row.put("PhidCblx", ysfl);
-        row.put("ProjectCost", 0);
-        row.put("PlannedCost", 0);
-        row.put("HisVersion", 0);
-        row.put("ChkFlg", "");
-        row.put("Version", "0");
-        row.put("IsWbs", "2");
-        row.put("IsLock", "");
-        row.put("AppStatus", "");
-        row.put("BillNo", "0");
-        row.put("Sortrow", "0");
-        row.put("AsrFlg", "");
-        row.put("WfFlg", "");
-        row.put("DaFlg", "");
         row.put("PhidOcode", org);
-        row.put("PhId", "");
         row.put("NgInsertDt", insertDt);
         row.put("NgUpdateDt", insertDt);
-        row.put("Creator", userId);
-        row.put("Editor", userId);
+        row.put("Creator", zdrId);
+        row.put("Editor", zdrId);
         row.put("CurOrgId", org);
-        row.put("PhidChkpsn", 0);
-        row.put("PhidSchemeId", boqInScheme);
+        row.put("Pms3BoqBillPhid", oldPhid);
         row.put("PhidTask", "");
         row.put("key", "");
-        row.put("user_jjsjkurl", url);
-        row.put("user_sfjjsjk", "1");
         if(phid>0)
         {
             row.put("key", phid);
-            row.put("PhId", phid);
         }
         row=new EntityConverter().SetFieldMap(billStr,row);
         return row;
@@ -592,11 +645,22 @@ public class BOQService {
      * 封装 分部分项 参数boqmtreeDataFB 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataFB(BOQBQModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
+    public Map<String, Object> boqmtreeDataFBChg(BOQBQModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              BOQChangeMModel changeM) {
 
+        if(changeM==null)
+        {
+            changeM=new BOQChangeMModel();
+            changeM.setOriQty((double) 0);
+            changeM.setCurrQty((double) 0);
+            changeM.setOriPrc((double) 0);
+            changeM.setCurrPrc((double) 0);
+            changeM.setOriAmt((double) 0);
+            changeM.setCurrAmt((double) 0);
+            changeM.setOldPhid("0");
+        }
         String wbsCode=itemInfo.getPId()==null||itemInfo.getPId().equals("")?itemInfo.getBidNodeID(): itemInfo.getPId();
-//        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
-//        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
         String wbsPhid="";
         String wbsName="";
         for(Map<String, Object> v : wbsPhids)
@@ -618,23 +682,15 @@ public class BOQService {
             }
         }
 
-//        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
-        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and  bill_no='"+itemInfo.getContractCode()+"'",String.class);
-        cntPhid=cntPhid==null?"":cntPhid;
+        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and bill_no='"+itemInfo.getContractCode()+"'",String.class);
         String insertDt=DateTranslate.getDateAsString(LocalDateTime.now(),"yyyy-MM-dd HH:mm:ss");
         Map<String, Object> newRow = new HashMap<>();
         HashMap<String, Object> row = new HashMap<>();
-        row.put("user_cbht", cntPhid);
         row.put("id", phid);
         row.put("PhId", phid);
         row.put("Pphid", parentPhid);
         row.put("NgInsertDt", insertDt);
         row.put("NgUpdateDt", insertDt);
-//        row.put("Creator", "");
-//        row.put("Creator_EXName", "");
-//        row.put("Editor", "");
-//        row.put("Editor_EXName", "");
-//        row.put("PhidPc", "");
         row.put("Code", itemInfo.getCode());
         row.put("Cname", itemInfo.getName());
         row.put("Descript", itemInfo.getSpec());
@@ -642,79 +698,25 @@ public class BOQService {
         row.put("PhidWbs_EXName", wbsName);
         row.put("PhidMsunit", msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
-//        row.put("PhidLevel", "");
-//        row.put("PhidLevel_EXName", "");
         row.put("MType", 1);
-//        row.put("IsCnt", 1);
-//        row.put("Expression", "");
-//        row.put("PhidCbs", "");
-//        row.put("PhidCbs_EXName", "");
+
         row.put("Rate", 0);
-//        row.put("Remarks", "");
         row.put("Qty", itemInfo.getQuantity());
         row.put("Prc", itemInfo.getRate());
         row.put("Amt", itemInfo.getTotal());
-//        row.put("AppStatus", "");
-//        row.put("Cblx", "");
-//        row.put("IsSummed", 0);
-//        row.put("Sortrow", 0);
-//        row.put("BoqidUniq", "");
-//        row.put("Version", "");
-//        row.put("Ftype", "");
-//        row.put("Parentphid", 0);
-//        row.put("IsRel", 0);
-//        row.put("PhidUnitPc", 0);
-//        row.put("PhidIndiPc", 0);
-//        row.put("Approval", 0);
-//        row.put("CbsQdId", "");
-//        row.put("Bidding", "");
-//        row.put("WriteSelf", "");
-//        row.put("Reply", "");
-//        row.put("ContractIncome", "");
-//        row.put("PlanCost", "");
-//        row.put("PhidVisa", "");
-//        row.put("PhidVisa_EXName", "");
-//        row.put("Color", "");
-//        row.put("Import", "");
-//        row.put("PcoRestQty", 0);
-//        row.put("PcoRestAmt", 0);
-//        row.put("PcoControlQty", 0);
-//        row.put("PcoControlAmt", 0);
-//        row.put("RestQty", 0);
-//        row.put("RestAmt", 0);
-//        row.put("ControlQty", 0);
-//        row.put("ControlAmt", 0);
-//        row.put("CntRestQty", 0);
-//        row.put("CntRestAmt", 0);
-//        row.put("CntControlQty", 0);
-//        row.put("CntControlAmt", 0);
-//        row.put("CntPayRestQty", 0);
-//        row.put("CntPayRestAmt", 0);
-//        row.put("CntPayControlQty", 0);
-//        row.put("CntPayControlAmt", 0);
-//        row.put("CzPlanRestQty", 0);
-//        row.put("CzPlanRestAmt", 0);
-//        row.put("IsChange", 0);
-//        row.put("SourceType", 0);
-//        row.put("PhidSource", 0);
-//        row.put("ImpInfo", 0);
-//        row.put("Nullify", 0);
-//        row.put("OriQty", 0);
-//        row.put("CurrQty", 0);
-//        row.put("CurrChangeQty", 0);
-//        row.put("OriPrc", 0);
-//        row.put("CurrPrc", 0);
-//        row.put("CurrChangePrc", 0);
-//        row.put("OriAmt", 0);
-//        row.put("CurrAmt", 0);
-//        row.put("CurrChangeAmt", 0);
-//        row.put("Pms3BoqMPhid", "");
-//        row.put("ChangeM", 0);
-//        row.put("ChangeM_EXName", "");
-//        row.put("ChgData", "");
-//        row.put("parentId", "root");
+        row.put("OriQty", changeM.getOriQty());//原始工程量
+        row.put("CurrQty", changeM.getCurrQty());//当前工程量
+        row.put("CurrChangeQty", Double.parseDouble(itemInfo.getQuantity())-changeM.getCurrQty());//本次变更工程量
+        row.put("OriPrc", changeM.getOriPrc());//
+        row.put("CurrPrc", changeM.getCurrPrc());//
+        row.put("CurrChangePrc", Double.parseDouble(itemInfo.getRate())-changeM.getCurrPrc());//
+        row.put("OriAmt", changeM.getOriAmt());//
+        row.put("CurrAmt", changeM.getCurrAmt());//
+        row.put("CurrChangeAmt", Double.parseDouble(itemInfo.getTotal())-changeM.getCurrAmt());//
+
         row.put("checked", "");
-//        row.put("loading", false);
+
+        row.put("Pms3BoqMPhid", changeM.getOldPhid());
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_djhs", itemInfo.getCostRate());
@@ -736,14 +738,22 @@ public class BOQService {
      * 封装 分部分项明细 参数boqdgridDataFB 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqdgridDataFB(BOQBQFeeModel itemInfo, Long phid,Long parentPhid,
+    public Map<String, Object> boqdgridDataFBChg(BOQBQFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
+                                              BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
 
+        if(changD==null)
+        {
+            changD=new BOQChangeDModel();
+            changD.setJjsjk("");
+            changD.setOldPhid("");
+            changD.setOriAmt((double) 0);
+            changD.setOriPrc((double) 0);
+            changD.setOriQty((double) 0);
+            changD.setOriTotAmt((double) 0);
+            changD.setOriTotQty((double) 0);
+        }
         itemInfo.setUnit("m");
-//        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
-//        String cbsPhid=jdbcTemplate.queryForObject("select phid from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
-//        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
         for(Map<String, Object> v : wbsPhids)
@@ -768,102 +778,34 @@ public class BOQService {
         HashMap<String, Object> row = new HashMap<>();
         row.put("PhId", "");
         row.put("Pphid", parentPhid);
-//        row.put("Ppphid", "");
-////        row.put("SType", "");
-        row.put("IsCost", "1");
         row.put("PhidCbs", cbsPhid);
         row.put("PhidCbs_EXName", cbsName);
-
-        String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
-        String phidResbs="";
-        for(Map<String, Object> v : resBsPhids)
-        {
-            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
-            {
-                code= String.valueOf(v.get("CODE"));
-                cname= String.valueOf(v.get("NAME"));
-                phidResbs= String.valueOf(v.get("PHID"));
-                break;
-            }
-        }
-        row.put("Code", code);
-        row.put("Cname", cname);
-        row.put("PhidResbs", phidResbs);
-
-
-//        row.put("RcjType", itemInfo.getFeeType());
-        row.put("Spec", itemInfo.getSpec());
-        row.put("PhidMsunit",msunitPhid);
-        row.put("PhidMsunit_EXName", itemInfo.getUnit());
-//        row.put("ResAlias", "");
-//        row.put("Note", "");
-//        row.put("Remarks", "");
-//        row.put("Qty", 0);
-        row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt",itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+        row.put("Code", itemInfo.getCode());
+        row.put("Cname", itemInfo.getName());
+        //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
+        //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
         row.put("FType", fType);
+        row.put("Spec", itemInfo.getSpec());
+        row.put("PhidMsunit",msunitPhid);
+        row.put("PhidMsunit_EXName", itemInfo.getUnit());
+
+        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
+        row.put("OriPrc",changD.getOriPrc());
+        row.put("OriQty",changD.getOriQty());
+        row.put("OriAmt",changD.getOriAmt());
+        row.put("OriTotqty",changD.getOriTotQty());
+        row.put("OriTotamt",changD.getOriTotAmt());
+        row.put("Pms3BoqMPhid",changD.getOldPhid());
+
         row.put("MType", 1);
-//        row.put("Cblx", "");
-//        row.put("PhidQuotaD", "");
-//        row.put("PhidQuota", "");
-//        row.put("PhidQuota_EXName", "");
-//        row.put("PhidItemdetail", "");
-//        row.put("ResPropertys", "");
-//        row.put("PcoRestQty", 0);
-//        row.put("PcoRestAmt", 0);
-//        row.put("RestQty", 0);
-//        row.put("RestAmt", 0);
-//        row.put("CntRestQty", 0 );
-//        row.put("CntRestAmt", 0);
-//        row.put("CntPayRestQty", 0);
-//        row.put("CntPayRestAmt", 0);
-//        row.put("IsFarmProduce", 0);
-//        row.put("PcoControlQty", 0);
-//        row.put("PcoControlAmt", 0);
-//        row.put("ControlQty", 0);
-//        row.put("ControlAmt", 0);
-//        row.put("CntControlQty", "");
-//        row.put("CntControlAmt", 0);
-//        row.put("CntPayControlQty", 0);
-//        row.put("CntPayControlAmt", 0);
-//        row.put("CostRefFlg", 0);
-//        row.put("CzPlanRestQty", 0);
-//        row.put("CzPlanRestAmt", 0);
-//        row.put("LossRate", 0);
-//        row.put("PhidCbsNew", "");
-//        row.put("CurrQty", 0);
-//        row.put("CurrChangeQty", 0);
-//        row.put("CurrPrc", 0);
-//        row.put("CurrChangePrc", 0);
-//        row.put("CurrAmt", 0);
-//        row.put("CurrChangeAmt", 0);
-//        row.put("CurrTotqty", 0);
-//        row.put("CurrChangeTotqty", 0);
-//        row.put("CurrTotamt", 0);
-//        row.put("CurrChangeTotamt", 0);
-//        row.put("Pms3BoqMPhid", "");
-//        row.put("ChangeD", 0);
-//        row.put("PhidCbsNew_EXName", "");
-//        row.put("PhidPc", "");
-//        row.put("PhidLevel", "");
-//        row.put("PhidLevel_EXName", "");
-//        row.put("MCname", "");
-//        row.put("MCode", "");
-//        row.put("MPhid", "");
-//        row.put("PhidQuota_EXCode", "");
-//        row.put("PhidWbs", "");
-//        row.put("PhidWbs_EXName", "");
-//        row.put("CbsQdId", "");
-//        row.put("BoqDIsRel", "");
+
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", itemInfo.getNoTaxRate());
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -881,8 +823,20 @@ public class BOQService {
      * 封装 单价措施费 参数boqmtreeDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataDJ(BOQMeasureModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
-
+    public Map<String, Object> boqmtreeDataDJChg(BOQMeasureModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              BOQChangeMModel changeM) {
+        if(changeM==null)
+        {
+            changeM=new BOQChangeMModel();
+            changeM.setOriQty((double) 0);
+            changeM.setCurrQty((double) 0);
+            changeM.setOriPrc((double) 0);
+            changeM.setCurrPrc((double) 0);
+            changeM.setOriAmt((double) 0);
+            changeM.setCurrAmt((double) 0);
+            changeM.setOldPhid("0");
+        }
         String wbsCode=itemInfo.getPId()==null||itemInfo.getPId().equals("")?itemInfo.getBidNodeID(): itemInfo.getPId();
 //        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
 //        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
@@ -907,12 +861,11 @@ public class BOQService {
                 break;
             }
         }
-        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and  bill_no='"+itemInfo.getContractCode()+"'",String.class);
+        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and bill_no='"+itemInfo.getContractCode()+"'",String.class);
         cntPhid=cntPhid==null?"":cntPhid;
         String insertDt=DateTranslate.getDateAsString(LocalDateTime.now(),"yyyy-MM-dd HH:mm:ss");
         Map<String, Object> newRow = new HashMap<>();
         HashMap<String, Object> row = new HashMap<>();
-        row.put("user_cbht", cntPhid);
         row.put("id", phid);
         row.put("PhId", phid);
 
@@ -943,67 +896,19 @@ public class BOQService {
         row.put("Qty", itemInfo.getQuantity());
         row.put("Prc", itemInfo.getRate());
         row.put("Amt", itemInfo.getTotal());
-//        row.put("AppStatus", "");
-//        row.put("Cblx", "");
-//        row.put("IsSummed", 0);
-//        row.put("Sortrow", 0);
-//        row.put("BoqidUniq", "");
-//        row.put("Version", "");
-//        row.put("Ftype", "");
-//        row.put("Parentphid", 0);
-//        row.put("IsRel", 0);
-//        row.put("PhidUnitPc", 0);
-//        row.put("PhidIndiPc", 0);
-//        row.put("Approval", 0);
-//        row.put("CbsQdId", "");
-//        row.put("Bidding", "");
-//        row.put("WriteSelf", "");
-//        row.put("Reply", "");
-//        row.put("ContractIncome", "");
-//        row.put("PlanCost", "");
-//        row.put("PhidVisa", "");
-//        row.put("PhidVisa_EXName", "");
-//        row.put("Color", "");
-//        row.put("Import", "");
-//        row.put("PcoRestQty", 0);
-//        row.put("PcoRestAmt", 0);
-//        row.put("PcoControlQty", 0);
-//        row.put("PcoControlAmt", 0);
-//        row.put("RestQty", 0);
-//        row.put("RestAmt", 0);
-//        row.put("ControlQty", 0);
-//        row.put("ControlAmt", 0);
-//        row.put("CntRestQty", 0);
-//        row.put("CntRestAmt", 0);
-//        row.put("CntControlQty", 0);
-//        row.put("CntControlAmt", 0);
-//        row.put("CntPayRestQty", 0);
-//        row.put("CntPayRestAmt", 0);
-//        row.put("CntPayControlQty", 0);
-//        row.put("CntPayControlAmt", 0);
-//        row.put("CzPlanRestQty", 0);
-//        row.put("CzPlanRestAmt", 0);
-//        row.put("IsChange", 0);
-//        row.put("SourceType", 0);
-//        row.put("PhidSource", 0);
-//        row.put("ImpInfo", 0);
-//        row.put("Nullify", 0);
-//        row.put("OriQty", 0);
-//        row.put("CurrQty", 0);
-//        row.put("CurrChangeQty", 0);
-//        row.put("OriPrc", 0);
-//        row.put("CurrPrc", 0);
-//        row.put("CurrChangePrc", 0);
-//        row.put("OriAmt", 0);
-//        row.put("CurrAmt", 0);
-//        row.put("CurrChangeAmt", 0);
-//        row.put("Pms3BoqMPhid", "");
-//        row.put("ChangeM", 0);
-//        row.put("ChangeM_EXName", "");
-//        row.put("ChgData", "");
-//        row.put("parentId", "root");
+        row.put("OriQty", changeM.getOriQty());//原始工程量
+        row.put("CurrQty", changeM.getCurrQty());//当前工程量
+        row.put("CurrChangeQty", Double.parseDouble(itemInfo.getQuantity())-changeM.getCurrQty());//本次变更工程量
+        row.put("OriPrc", changeM.getOriPrc());//
+        row.put("CurrPrc", changeM.getCurrPrc());//
+        row.put("CurrChangePrc", Double.parseDouble(itemInfo.getRate())-changeM.getCurrPrc());//
+        row.put("OriAmt", changeM.getOriAmt());//
+        row.put("CurrAmt", changeM.getCurrAmt());//
+        row.put("CurrChangeAmt", Double.parseDouble(itemInfo.getTotal())-changeM.getCurrAmt());//
+
         row.put("checked", "");
-//        row.put("loading", false);
+
+        row.put("Pms3BoqMPhid", changeM.getOldPhid());
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_djhs", itemInfo.getCostRate());
@@ -1025,10 +930,20 @@ public class BOQService {
      * 封装 单价措施费明细  参数boqdgridDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqdgridDataDJ(BOQMeasureFeeModel itemInfo, Long phid,Long parentPhid,
+    public Map<String, Object> boqdgridDataDJChg(BOQMeasureFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
-
+                                              BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
+        if(changD==null)
+        {
+            changD=new BOQChangeDModel();
+            changD.setJjsjk("");
+            changD.setOldPhid("");
+            changD.setOriAmt((double) 0);
+            changD.setOriPrc((double) 0);
+            changD.setOriQty((double) 0);
+            changD.setOriTotAmt((double) 0);
+            changD.setOriTotQty((double) 0);
+        }
         itemInfo.setUnit("m");
 //        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
 //        String cbsPhid=jdbcTemplate.queryForObject("select phid from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
@@ -1067,38 +982,26 @@ public class BOQService {
 //        row.put("PhidRestype", "");
 //        row.put("PhidResbs", "");
 //        row.put("PhidResbs_EXName", "");
-        String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
-        String phidResbs="";
-        for(Map<String, Object> v : resBsPhids)
-        {
-            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
-            {
-                code= String.valueOf(v.get("CODE"));
-                cname= String.valueOf(v.get("NAME"));
-                phidResbs= String.valueOf(v.get("PHID"));
-                break;
-            }
-        }
-        row.put("Code", code);
-        row.put("Cname", cname);
-        row.put("PhidResbs", phidResbs);
-//        row.put("RcjType", itemInfo.getFeeType());
-        row.put("Spec", itemInfo.getSpec());
-        row.put("PhidMsunit",msunitPhid);
-        row.put("PhidMsunit_EXName", itemInfo.getUnit());
-//        row.put("ResAlias", "");
-//        row.put("Note", "");
-//        row.put("Remarks", "");
-//        row.put("Qty", 0);
-        row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt", itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+        row.put("Code", itemInfo.getCode());
+        row.put("Cname", itemInfo.getName());
+        //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
+        //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
         row.put("FType", fType);
+        row.put("Spec", itemInfo.getSpec());
+        row.put("PhidMsunit",msunitPhid);
+        row.put("PhidMsunit_EXName", itemInfo.getUnit());
+
+        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
+        row.put("OriPrc",changD.getOriPrc());
+        row.put("OriQty",changD.getOriQty());
+        row.put("OriAmt",changD.getOriAmt());
+        row.put("OriTotqty",changD.getOriTotQty());
+        row.put("OriTotamt",changD.getOriTotAmt());
+        row.put("Pms3BoqMPhid",changD.getOldPhid());
         row.put("MType", 2);
 //        row.put("Cblx", "");
 //        row.put("PhidQuotaD", "");
@@ -1154,7 +1057,7 @@ public class BOQService {
 //        row.put("BoqDIsRel", "");
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", itemInfo.getNoTaxRate());
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -1172,8 +1075,20 @@ public class BOQService {
      * 封装 其他项清单 参数boqmtreeDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataQT(BOQOtherModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
-
+    public Map<String, Object> boqmtreeDataQTChg(BOQOtherModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              BOQChangeMModel changeM) {
+        if(changeM==null)
+        {
+            changeM=new BOQChangeMModel();
+            changeM.setOriQty((double) 0);
+            changeM.setCurrQty((double) 0);
+            changeM.setOriPrc((double) 0);
+            changeM.setCurrPrc((double) 0);
+            changeM.setOriAmt((double) 0);
+            changeM.setCurrAmt((double) 0);
+            changeM.setOldPhid("0");
+        }
         String wbsCode=itemInfo.getBidNodeID();
 //        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
 //        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
@@ -1198,103 +1113,46 @@ public class BOQService {
                 break;
             }
         }
-        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and  bill_no='"+itemInfo.getContractCode()+"'",String.class);
+        String cntPhid=jdbcTemplate.queryForObject("select phid from pcm3_cnt_m where cnt_type='5' and bill_no='"+itemInfo.getContractCode()+"'",String.class);
         cntPhid=cntPhid==null?"":cntPhid;
         String insertDt=DateTranslate.getDateAsString(LocalDateTime.now(),"yyyy-MM-dd HH:mm:ss");
         Map<String, Object> newRow = new HashMap<>();
         HashMap<String, Object> row = new HashMap<>();
-        row.put("user_cbht", cntPhid);
         row.put("id", phid);
         row.put("PhId", phid);
         row.put("Pphid", parentPhid);
         row.put("NgInsertDt", insertDt);
         row.put("NgUpdateDt", insertDt);
-//        row.put("Creator", "");
-//        row.put("Creator_EXName", "");
-//        row.put("Editor", "");
-//        row.put("Editor_EXName", "");
-//        row.put("PhidPc", "");
-//        row.put("PhidPc_EXName", "");
+
         row.put("Code", itemInfo.getCode());
         row.put("Cname", itemInfo.getName());
-//        row.put("Descript", "");
+
         row.put("PhidWbs", wbsPhid);
         row.put("PhidWbs_EXName", wbsName);
         row.put("PhidMsunit", msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
-//        row.put("PhidLevel", "");
-//        row.put("PhidLevel_EXName", "");
+
         row.put("MType", 3);
-//        row.put("IsCnt", 1);
-//        row.put("Expression", "");
-//        row.put("PhidCbs", "");
-//        row.put("PhidCbs_EXName", "");
+
         row.put("Rate", 0);
-//        row.put("Remarks", "");
-//        row.put("Qty", 0);
-//        row.put("Prc", 0);
+        row.put("Qty", 1);
+        row.put("Prc", itemInfo.getTotal());
         row.put("Amt", itemInfo.getTotal());
-//        row.put("AppStatus", "");
-//        row.put("Cblx", "");
-//        row.put("IsSummed", 0);
-//        row.put("Sortrow", 0);
-//        row.put("BoqidUniq", "");
-//        row.put("Version", "");
-//        row.put("Ftype", "");
-//        row.put("Parentphid", 0);
-//        row.put("IsRel", 0);
-//        row.put("PhidUnitPc", 0);
-//        row.put("PhidIndiPc", 0);
-//        row.put("Approval", 0);
-//        row.put("CbsQdId", "");
-//        row.put("Bidding", "");
-//        row.put("WriteSelf", "");
-//        row.put("Reply", "");
-//        row.put("ContractIncome", "");
-//        row.put("PlanCost", "");
-//        row.put("PhidVisa", "");
-//        row.put("PhidVisa_EXName", "");
-//        row.put("Color", "");
-//        row.put("Import", "");
-//        row.put("PcoRestQty", 0);
-//        row.put("PcoRestAmt", 0);
-//        row.put("PcoControlQty", 0);
-//        row.put("PcoControlAmt", 0);
-//        row.put("RestQty", 0);
-//        row.put("RestAmt", 0);
-//        row.put("ControlQty", 0);
-//        row.put("ControlAmt", 0);
-//        row.put("CntRestQty", 0);
-//        row.put("CntRestAmt", 0);
-//        row.put("CntControlQty", 0);
-//        row.put("CntControlAmt", 0);
-//        row.put("CntPayRestQty", 0);
-//        row.put("CntPayRestAmt", 0);
-//        row.put("CntPayControlQty", 0);
-//        row.put("CntPayControlAmt", 0);
-//        row.put("CzPlanRestQty", 0);
-//        row.put("CzPlanRestAmt", 0);
-//        row.put("IsChange", 0);
-//        row.put("SourceType", 0);
-//        row.put("PhidSource", 0);
-//        row.put("ImpInfo", 0);
-//        row.put("Nullify", 0);
+
         row.put("OriQty", 1);
-//        row.put("CurrQty", 0);
-//        row.put("CurrChangeQty", 0);
-//        row.put("OriPrc", 0);
-//        row.put("CurrPrc", 0);
-//        row.put("CurrChangePrc", 0);
-//        row.put("OriAmt", 0);
-//        row.put("CurrAmt", 0);
-//        row.put("CurrChangeAmt", 0);
-//        row.put("Pms3BoqMPhid", "");
-//        row.put("ChangeM", 0);
-//        row.put("ChangeM_EXName", "");
-//        row.put("ChgData", "");
-//        row.put("parentId", "root");
+        row.put("OriQty", changeM.getOriQty());//原始工程量
+        row.put("CurrQty", changeM.getCurrQty());//当前工程量
+        row.put("CurrChangeQty", 0);//本次变更工程量
+        row.put("OriPrc", changeM.getOriPrc());//
+        row.put("CurrPrc", changeM.getCurrPrc());//
+        row.put("CurrChangePrc", 0);//
+        row.put("OriAmt", changeM.getOriAmt());//
+        row.put("CurrAmt", changeM.getCurrAmt());//
+        row.put("CurrChangeAmt", Double.parseDouble(itemInfo.getTotal())-changeM.getCurrAmt());//
+
         row.put("checked", "");
-        row.put("loading", false);
+
+        row.put("Pms3BoqMPhid", changeM.getOldPhid());
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_djhs", itemInfo.getTotal());
@@ -1316,10 +1174,20 @@ public class BOQService {
      * 封装 其他项清单明细 参数boqdgridDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqdgridDataQT(BOQFeeModel itemInfo, Long phid,Long parentPhid,
+    public Map<String, Object> boqdgridDataQTChg(BOQFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
-
+                                              BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
+        if(changD==null)
+        {
+            changD=new BOQChangeDModel();
+            changD.setJjsjk("");
+            changD.setOldPhid("");
+            changD.setOriAmt((double) 0);
+            changD.setOriPrc((double) 0);
+            changD.setOriQty((double) 0);
+            changD.setOriTotAmt((double) 0);
+            changD.setOriTotQty((double) 0);
+        }
         itemInfo.setUnit("m");
 //        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
 //        String cbsPhid=jdbcTemplate.queryForObject("select phid from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
@@ -1348,104 +1216,35 @@ public class BOQService {
         HashMap<String, Object> row = new HashMap<>();
         row.put("PhId", "");
         row.put("Pphid", parentPhid);
-//        row.put("Ppphid", "");
-//        row.put("SType", "");
+
         row.put("IsCost", "1");
         row.put("PhidCbs", cbsPhid);
         row.put("PhidCbs_EXName", cbsName);
-//        row.put("PhidItemid", "");
-//        row.put("PhidItemid_EXName", "");
-//        row.put("PhidRestype", "");
-//        row.put("PhidResbs", "");
-//        row.put("PhidResbs_EXName", "");
-        String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
-        String phidResbs="";
-        for(Map<String, Object> v : resBsPhids)
-        {
-            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
-            {
-                code= String.valueOf(v.get("CODE"));
-                cname= String.valueOf(v.get("NAME"));
-                phidResbs= String.valueOf(v.get("PHID"));
-                break;
-            }
-        }
-        row.put("Code", code);
-        row.put("Cname", cname);
-        row.put("PhidResbs", phidResbs);
-//        row.put("RcjType", itemInfo.getFeeType());
-        row.put("Spec", itemInfo.getSpec());
-        row.put("PhidMsunit",msunitPhid);
-        row.put("PhidMsunit_EXName", itemInfo.getUnit());
-//        row.put("ResAlias", "");
-//        row.put("Note", "");
-//        row.put("Remarks", "");
-//        row.put("Qty", 0);
-        row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt", itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+
+        row.put("Code", itemInfo.getCode());
+        row.put("Cname", itemInfo.getName());
+        //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
+        //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
         row.put("FType", fType);
+        row.put("Spec", itemInfo.getSpec());
+        row.put("PhidMsunit",msunitPhid);
+        row.put("PhidMsunit_EXName", itemInfo.getUnit());
+
+        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
+        row.put("OriPrc",changD.getOriPrc());
+        row.put("OriQty",changD.getOriQty());
+        row.put("OriAmt",changD.getOriAmt());
+        row.put("OriTotqty",changD.getOriTotQty());
+        row.put("OriTotamt",changD.getOriTotAmt());
+        row.put("Pms3BoqMPhid",changD.getOldPhid());
         row.put("MType", 3);
-//        row.put("Cblx", "");
-//        row.put("PhidQuotaD", "");
-//        row.put("PhidQuota", "");
-//        row.put("PhidQuota_EXName", "");
-//        row.put("PhidItemdetail", "");
-//        row.put("ResPropertys", "");
-//        row.put("PcoRestQty", 0);
-//        row.put("PcoRestAmt", 0);
-//        row.put("RestQty", 0);
-//        row.put("RestAmt", 0);
-//        row.put("CntRestQty", 0 );
-//        row.put("CntRestAmt", 0);
-//        row.put("CntPayRestQty", 0);
-//        row.put("CntPayRestAmt", 0);
-//        row.put("IsFarmProduce", 0);
-//        row.put("PcoControlQty", 0);
-//        row.put("PcoControlAmt", 0);
-//        row.put("ControlQty", 0);
-//        row.put("ControlAmt", 0);
-//        row.put("CntControlQty", "");
-//        row.put("CntControlAmt", 0);
-//        row.put("CntPayControlQty", 0);
-//        row.put("CntPayControlAmt", 0);
-//        row.put("CostRefFlg", 0);
-//        row.put("CzPlanRestQty", 0);
-//        row.put("CzPlanRestAmt", 0);
-//        row.put("LossRate", 0);
-//        row.put("PhidCbsNew", "");
-//        row.put("CurrQty", 0);
-//        row.put("CurrChangeQty", 0);
-//        row.put("CurrPrc", 0);
-//        row.put("CurrChangePrc", 0);
-//        row.put("CurrAmt", 0);
-//        row.put("CurrChangeAmt", 0);
-//        row.put("CurrTotqty", 0);
-//        row.put("CurrChangeTotqty", 0);
-//        row.put("CurrTotamt", 0);
-//        row.put("CurrChangeTotamt", 0);
-//        row.put("Pms3BoqMPhid", "");
-//        row.put("ChangeD", 0);
-//        row.put("PhidCbsNew_EXName", "");
-//        row.put("PhidPc", "");
-//        row.put("PhidLevel", "");
-//        row.put("PhidLevel_EXName", "");
-//        row.put("MCname", "");
-//        row.put("MCode", "");
-//        row.put("MPhid", "");
-//        row.put("PhidQuota_EXCode", "");
-//        row.put("PhidWbs", "");
-//        row.put("PhidWbs_EXName", "");
-//        row.put("CbsQdId", "");
-//        row.put("BoqDIsRel", "");
         row.put("key", "");
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", itemInfo.getNoTaxRate());
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());

@@ -6,18 +6,18 @@ import lombok.Setter;
 import java.util.List;
 
 /**
- * 合同计量结算模型
+ * 其他合同计量结算模型
  * @Author ChenXiangLu
- * @Date 2020/12/2 10:48
+ * @Date 2020/12/14 18:38
  * @Version 1.0
  */
 @Getter
 @Setter
-public class CntMeasureModel {
+public class CntMeasureOtherModel {
     /**
      * 主键
      */
-        private String phid;
+    private String phid;
     /**
      * 单据编码
      */
@@ -83,11 +83,11 @@ public class CntMeasureModel {
      */
     private String remarks;
     /**
-     * 单据类型 5_劳务分包 4_专业分包
+     * 单据类型  11_周材 10_设备 6_其他支出
      */
     private String billType;
     /**
      * 明细
      */
-    private List<CntMeasureItemModel> pay_data;
+    private List<CntMeasureOtherItemModel> pay_data;
 }

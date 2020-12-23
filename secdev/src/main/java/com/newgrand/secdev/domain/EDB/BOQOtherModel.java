@@ -2,6 +2,7 @@ package com.newgrand.secdev.domain.EDB;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,11 +43,13 @@ public class BOQOtherModel {
      */
     @JsonProperty(value = "Unit")
     private String unit;
+
     /**
      * 合价
      */
     @JsonProperty(value = "Total")
     private String total;
+
     /**
      * 合同编码
      */
@@ -58,4 +61,5 @@ public class BOQOtherModel {
      */
     @JsonProperty(value = "Status")
     private String status;
+
 }

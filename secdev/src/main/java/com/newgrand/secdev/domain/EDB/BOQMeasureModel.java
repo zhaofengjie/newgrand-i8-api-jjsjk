@@ -79,6 +79,21 @@ public class BOQMeasureModel {
     @JsonProperty(value = "Status")
     private String status;
     /**
+     * 成本单价 合价=单*数量
+     */
+    @JsonProperty(value = "CostRate")
+    private String costRate;
+    /**
+     * 无税成本单价 合价=单*数量
+     */
+    @JsonProperty(value = "CostNoRate")
+    private String costNoRate;
+    /**
+     *  税金合价
+     */
+    @JsonProperty(value = "SjTotal")
+    private String sjTotal;
+    /**
      * 明细
      */
     @JsonProperty(value = "FeeItemInfos")

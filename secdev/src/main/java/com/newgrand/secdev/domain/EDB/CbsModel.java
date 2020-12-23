@@ -18,4 +18,5 @@ public class CbsModel {
     private String cbs;
     private String parent_code;
     private String remarks;
+    private String pc_no;
 }

@@ -14,6 +14,10 @@ import lombok.Setter;
 @Setter
 public class RepositoryLLItemModel {
     /**
+     * 主键
+     */
+    private String phid;
+    /**
      * 父级编码
      */
     @Ignore
@@ -27,9 +31,17 @@ public class RepositoryLLItemModel {
      */
     private String item_name;
     /**
+     * 物料分类编码
+     */
+    private String resBsNo;
+    /**
      *批号
      */
     private String batchno;
+    /**
+     *入库单价(不含税)
+     */
+    private String rk_prc_notax;
     /**
      *入库单价(含税)
      */
@@ -74,4 +86,12 @@ public class RepositoryLLItemModel {
      *备注
      */
     private String remarks;
+    /**
+     *单位
+     */
+    private String unit;
+    /**
+     *数量
+     */
+    private String qty;
 }

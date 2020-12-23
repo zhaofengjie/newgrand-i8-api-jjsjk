@@ -41,10 +41,15 @@ public class BOQModel {
     @JsonProperty(value = "UserCode")
     private String userCode;
     /**
+     * 对方单据链接
+     */
+    @JsonProperty(value = "Url")
+    private String url;
+    /**
      * BOQ工程清单
      */
     @JsonProperty(value = "BQItemInfos")
-    private ArrayList<BOQBQModel> bqQItemInfos;
+    private ArrayList<BOQBQModel> bQItemInfos;
     /**
      * BOQ单价措施费
      */

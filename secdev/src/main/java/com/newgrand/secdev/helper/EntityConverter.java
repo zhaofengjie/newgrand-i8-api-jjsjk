@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class EntityConverter {
@@ -22,5 +23,13 @@ public class EntityConverter {
             form.put(key,map.get(key));
         }
         return root.toJSONString();
+    }
+
+    public HashMap<String,Object> SetFieldMap(String baseData, HashMap<String,Object> map){
+        HashMap<String,Object> root = JSON.parseObject(baseData, HashMap.class);
+        for (String key : map.keySet()) {
+            root.put(key,map.get(key));
+        }
+        return root;
     }
 }
