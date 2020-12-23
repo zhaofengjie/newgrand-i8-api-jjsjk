@@ -159,14 +159,12 @@ public class BOQChangeService {
         param.getBQItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-//                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                     cbsCodes.add(ff.getCourseCode());
                 }));
         param.getMeasureItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-//                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                         cbsCodes.add(ff.getCourseCode());
                 }));
@@ -507,7 +505,7 @@ public class BOQChangeService {
             Map<String, Object> temp=new HashMap<>();
             var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals(v.getId())).collect(Collectors.toList());
             BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
-            temp=boqmtreeDataFBChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
+            temp=boqmtreeDataFBChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM,isCost);
             boqmtreeDataFBs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -533,7 +531,7 @@ public class BOQChangeService {
             Map<String, Object> temp=new HashMap<>();
             var tempOldValueM=oldValuesM.stream().filter(f->f.getJjsjk().equals(v.getId())).collect(Collectors.toList());
             BOQChangeMModel oldValueM=tempOldValueM==null||tempOldValueM.size()==0? null:tempOldValueM.get(0);
-            temp=boqmtreeDataDJChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM);
+            temp=boqmtreeDataDJChg(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,oldValueM,isCost);
             boqmtreeDataDJs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -647,7 +645,7 @@ public class BOQChangeService {
      */
     public Map<String, Object> boqmtreeDataFBChg(BOQBQModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              BOQChangeMModel changeM) {
+                                              BOQChangeMModel changeM,boolean isCost) {
 
         if(changeM==null)
         {
@@ -703,7 +701,7 @@ public class BOQChangeService {
         row.put("Rate", 0);
         row.put("Qty", itemInfo.getQuantity());
         row.put("Prc", itemInfo.getRate());
-        row.put("Amt", itemInfo.getTotal());
+        row.put("Amt", isCost?Double.parseDouble(itemInfo.getQuantity())*Double.parseDouble(itemInfo.getCostNoRate()):itemInfo.getTotal());
         row.put("OriQty", changeM.getOriQty());//原始工程量
         row.put("CurrQty", changeM.getCurrQty());//当前工程量
         row.put("CurrChangeQty", Double.parseDouble(itemInfo.getQuantity())-changeM.getCurrQty());//本次变更工程量
@@ -787,13 +785,14 @@ public class BOQChangeService {
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("Spec", itemInfo.getSpec());
         row.put("PhidMsunit",msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
 
-        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
         row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
+        row.put("Prc", itemInfo.getNoTaxRate());
         row.put("OriPrc",changD.getOriPrc());
         row.put("OriQty",changD.getOriQty());
         row.put("OriAmt",changD.getOriAmt());
@@ -804,8 +803,10 @@ public class BOQChangeService {
         row.put("MType", 1);
 
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_djhs", itemInfo.getNoTaxRate());
+        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -825,7 +826,7 @@ public class BOQChangeService {
      */
     public Map<String, Object> boqmtreeDataDJChg(BOQMeasureModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              BOQChangeMModel changeM) {
+                                              BOQChangeMModel changeM,boolean isCost) {
         if(changeM==null)
         {
             changeM=new BOQChangeMModel();
@@ -895,7 +896,7 @@ public class BOQChangeService {
 //        row.put("Remarks", "");
         row.put("Qty", itemInfo.getQuantity());
         row.put("Prc", itemInfo.getRate());
-        row.put("Amt", itemInfo.getTotal());
+        row.put("Amt", isCost?Double.parseDouble(itemInfo.getQuantity())*Double.parseDouble(itemInfo.getCostNoRate()):itemInfo.getTotal());
         row.put("OriQty", changeM.getOriQty());//原始工程量
         row.put("CurrQty", changeM.getCurrQty());//当前工程量
         row.put("CurrChangeQty", Double.parseDouble(itemInfo.getQuantity())-changeM.getCurrQty());//本次变更工程量
@@ -989,13 +990,14 @@ public class BOQChangeService {
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("Spec", itemInfo.getSpec());
         row.put("PhidMsunit",msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
 
-        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
         row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
+        row.put("Prc", itemInfo.getNoTaxRate());
         row.put("OriPrc",changD.getOriPrc());
         row.put("OriQty",changD.getOriQty());
         row.put("OriAmt",changD.getOriAmt());
@@ -1056,8 +1058,10 @@ public class BOQChangeService {
 //        row.put("CbsQdId", "");
 //        row.put("BoqDIsRel", "");
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_djhs", itemInfo.getNoTaxRate());
+        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -1228,12 +1232,14 @@ public class BOQChangeService {
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("Spec", itemInfo.getSpec());
         row.put("PhidMsunit",msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
 
-        row.put("Amt",itemInfo.getTaxRate());
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
+        row.put("Prc", itemInfo.getNoTaxRate());
+
         row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
         row.put("OriPrc",changD.getOriPrc());
         row.put("OriQty",changD.getOriQty());
@@ -1243,8 +1249,10 @@ public class BOQChangeService {
         row.put("Pms3BoqMPhid",changD.getOldPhid());
         row.put("MType", 3);
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
-        row.put("user_djhs", itemInfo.getNoTaxRate());
+        row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());

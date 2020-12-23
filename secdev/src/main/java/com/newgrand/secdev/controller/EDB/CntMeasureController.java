@@ -75,7 +75,7 @@ public class CntMeasureController {
                 "left join bs_data t7 on t7.phid=t1.phid_ysfl\n" +
                 "left join fg_orglist t8 on t8.phid=t1.phid_ocode\n" +
                 "left join fg_orglist t9 on t9.phid=t1.phid_tr_ocode\n" +
-                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null)  and t1.bill_type in ('4','5')";
+                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and chk_flg='1' and t1.bill_type in ('4','5')";
 
         RowMapper<CntMeasureModel> rowMapper=new BeanPropertyRowMapper(CntMeasureModel.class);
         List<CntMeasureModel> cntMeasures= jdbcTemplate.query(sqlM, rowMapper);
@@ -160,7 +160,7 @@ public class CntMeasureController {
                 "left join bs_data t7 on t7.phid=t1.phid_ysfl\n" +
                 "left join fg_orglist t8 on t8.phid=t1.phid_ocode\n" +
                 "left join fg_orglist t9 on t9.phid=t1.phid_tr_ocode\n" +
-                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null)  and t1.bill_type in ('6','10','11')";
+                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and chk_flg='1' and t1.bill_type in ('6','10','11')";
 
         RowMapper<CntMeasureOtherModel> rowMapper=new BeanPropertyRowMapper(CntMeasureOtherModel.class);
         List<CntMeasureOtherModel> cntMeasureOthers= jdbcTemplate.query(sqlM, rowMapper);

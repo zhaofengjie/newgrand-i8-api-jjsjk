@@ -14,5 +14,4 @@ import lombok.Setter;
 public class BOQResultModel {
     private String id;
     private String url;
-    private String chkFlg;
 }

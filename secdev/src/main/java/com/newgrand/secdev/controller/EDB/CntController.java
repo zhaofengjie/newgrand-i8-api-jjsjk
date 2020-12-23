@@ -79,7 +79,7 @@ public class CntController {
                 "left join hr_epm_main t12 on t12.phid=t1.phid_pm\n" +
                 "left join hr_epm_main t13 on t13.phid=t1.phid_pe\n" +
                 "left join bs_data t14 on t14.phid=t1.phid_ysfl and t14.oper_type = 'budget_classify'" +
-                "where  t1.cnt_type=5";
+                "where  t1.cnt_type=5 and t1.chk_flg='1'";
 //                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and t1.cnt_type=5";
         RowMapper<CntModel> rowMapper=new BeanPropertyRowMapper(CntModel.class);
         List<CntModel> cnts= jdbcTemplate.query(sql, rowMapper);
@@ -101,6 +101,7 @@ public class CntController {
                     if(form.equals("0"))
                     {
                         System.out.println("推送成功");
+//        jdbcTemplate.execute("update pcm3_cnt_m set user_tbjjsjk='1' where phid=");
                     }
                     else
                     {
@@ -115,7 +116,6 @@ public class CntController {
                 System.out.println("推送异常"+e.getMessage());
             }
         }
-//        jdbcTemplate.execute("update pcm3_cnt_m set user_tbjjsjk='1' where phid=");
         return  "测试成功";
     }
 }

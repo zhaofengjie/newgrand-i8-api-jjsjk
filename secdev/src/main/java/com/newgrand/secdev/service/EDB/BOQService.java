@@ -149,14 +149,12 @@ public class BOQService {
         param.getBQItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                     cbsCodes.add(ff.getCourseCode());
                 }));
         param.getMeasureItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
-                    ff.setCourseCode("01.01.01");//测试使用,测试时对方你未维护该字段,后期取消该默认值
                     if(!cbsCodes.contains(ff.getCourseCode()))
                         cbsCodes.add(ff.getCourseCode());
                 }));
@@ -437,7 +435,7 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataFB(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            temp=boqmtreeDataFB(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,isCost);
             boqmtreeDataFBs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -447,7 +445,7 @@ public class BOQService {
                     if (level3Phid==null)
                         level3Phid=minPhid;
                     Map<String, Object> tempFee = new HashMap<>();
-                    tempFee = boqdgridDataFB(f, level3Phid, level3ParentPhid,cbsPhids,msunitPhids,resBsPhids);
+                    tempFee = boqdgridDataFB(f, level3Phid, level3ParentPhid,cbsPhids,msunitPhids,v.getQuantity(),resBsPhids);
                     boqdgridDataFBs.add(tempFee);
                 }
             }
@@ -458,7 +456,7 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataDJ(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            temp=boqmtreeDataDJ(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,isCost);
             boqmtreeDataDJs.add(temp);
             level3ParentPhid=level2Phid;
             if(isCost) {
@@ -468,7 +466,7 @@ public class BOQService {
                     if (level3Phid==null)
                         level3Phid = minPhid;
                     Map<String, Object> tempFee = new HashMap<>();
-                    tempFee = boqdgridDataDJ(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,resBsPhids);
+                    tempFee = boqdgridDataDJ(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,v.getQuantity(),resBsPhids);
                     boqdgridDataDJs.add(tempFee);
                 }
             }
@@ -479,7 +477,7 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataQT(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            temp=boqmtreeDataQT(v,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,isCost);
             boqmtreeDataQTs.add(temp);
         }
         if(isCost) {//如果是成本清单,需要将规费税金同步到其他费用里面,并且在清单项中添加一个固定的清单项
@@ -498,7 +496,7 @@ public class BOQService {
             if(level2Phid==null)
                 level2Phid=minPhid;
             Map<String, Object> temp=new HashMap<>();
-            temp=boqmtreeDataQT(tempOther,level2Phid,level2ParentPhid,wbsPhids,msunitPhids);
+            temp=boqmtreeDataQT(tempOther,level2Phid,level2ParentPhid,wbsPhids,msunitPhids,isCost);
             boqmtreeDataQTs.add(temp);
             level3ParentPhid=level2Phid;
             for (BOQFeeModel f : param.getFeeItemInfos()) {
@@ -507,7 +505,7 @@ public class BOQService {
                 if (level3Phid==null)
                     level3Phid = minPhid;
                 Map<String, Object> tempFee = new HashMap<>();
-                tempFee = boqdgridDataQT(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,resBsPhids);
+                tempFee = boqdgridDataQT(f, level3Phid, level3ParentPhid, cbsPhids,msunitPhids,"1",resBsPhids);
                 boqdgridDataQTs.add(tempFee);
             }
 //            for (BOQFeeModel v : param.getFeeItemInfos()) {
@@ -592,8 +590,10 @@ public class BOQService {
      * 封装 分部分项 参数boqmtreeDataFB 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataFB(BOQBQModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
-
+    public Map<String, Object> boqmtreeDataFB(BOQBQModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              boolean isCost) {
+        itemInfo.setUnit("m");
         String wbsCode=itemInfo.getPId()==null||itemInfo.getPId().equals("")?itemInfo.getBidNodeID(): itemInfo.getPId();
 //        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
 //        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
@@ -611,7 +611,7 @@ public class BOQService {
         String msunitPhid="";
         for(Map<String, Object> v : msunitPhids)
         {
-            if(String.valueOf(v.get("MSNAME")).equals(wbsCode))
+            if(String.valueOf(v.get("MSNAME")).equals(itemInfo.getUnit()))
             {
                 msunitPhid= String.valueOf(v.get("PHID"));
                 break;
@@ -652,8 +652,8 @@ public class BOQService {
         row.put("Rate", 0);
 //        row.put("Remarks", "");
         row.put("Qty", itemInfo.getQuantity());
-        row.put("Prc", itemInfo.getRate());
-        row.put("Amt", itemInfo.getTotal());
+        row.put("Prc", isCost?itemInfo.getCostNoRate():itemInfo.getRate());
+        row.put("Amt", isCost?Double.parseDouble(itemInfo.getQuantity())*Double.parseDouble(itemInfo.getCostNoRate()):itemInfo.getTotal());
 //        row.put("AppStatus", "");
 //        row.put("Cblx", "");
 //        row.put("IsSummed", 0);
@@ -738,7 +738,7 @@ public class BOQService {
      */
     public Map<String, Object> boqdgridDataFB(BOQBQFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
+                                              String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
 //        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
@@ -775,7 +775,7 @@ public class BOQService {
         row.put("PhidCbs_EXName", cbsName);
 
         String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
+        String cname=itemInfo.getName();
         String phidResbs="";
         for(Map<String, Object> v : resBsPhids)
         {
@@ -799,15 +799,15 @@ public class BOQService {
 //        row.put("ResAlias", "");
 //        row.put("Note", "");
 //        row.put("Remarks", "");
-//        row.put("Qty", 0);
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
         row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt",itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
+        row.put("Totqty", itemInfo.getQuantity());
+        row.put("Totamt", itemInfo.getNoTaxTotal());
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("MType", 1);
 //        row.put("Cblx", "");
 //        row.put("PhidQuotaD", "");
@@ -862,8 +862,10 @@ public class BOQService {
 //        row.put("CbsQdId", "");
 //        row.put("BoqDIsRel", "");
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -881,8 +883,10 @@ public class BOQService {
      * 封装 单价措施费 参数boqmtreeDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataDJ(BOQMeasureModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
-
+    public Map<String, Object> boqmtreeDataDJ(BOQMeasureModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              boolean isCost) {
+        itemInfo.setUnit("m");
         String wbsCode=itemInfo.getPId()==null||itemInfo.getPId().equals("")?itemInfo.getBidNodeID(): itemInfo.getPId();
 //        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
 //        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
@@ -901,7 +905,7 @@ public class BOQService {
         String msunitPhid="";
         for(Map<String, Object> v : msunitPhids)
         {
-            if(String.valueOf(v.get("MSNAME")).equals(wbsCode))
+            if(String.valueOf(v.get("MSNAME")).equals(itemInfo.getUnit()))
             {
                 msunitPhid= String.valueOf(v.get("PHID"));
                 break;
@@ -941,8 +945,8 @@ public class BOQService {
         row.put("Rate", 0);
 //        row.put("Remarks", "");
         row.put("Qty", itemInfo.getQuantity());
-        row.put("Prc", itemInfo.getRate());
-        row.put("Amt", itemInfo.getTotal());
+        row.put("Prc", isCost?itemInfo.getCostNoRate():itemInfo.getRate());
+        row.put("Amt", isCost?Double.parseDouble(itemInfo.getQuantity())*Double.parseDouble(itemInfo.getCostNoRate()):itemInfo.getTotal());
 //        row.put("AppStatus", "");
 //        row.put("Cblx", "");
 //        row.put("IsSummed", 0);
@@ -1027,7 +1031,7 @@ public class BOQService {
      */
     public Map<String, Object> boqdgridDataDJ(BOQMeasureFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
+                                              String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
 //        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
@@ -1068,7 +1072,7 @@ public class BOQService {
 //        row.put("PhidResbs", "");
 //        row.put("PhidResbs_EXName", "");
         String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
+        String cname=itemInfo.getName();
         String phidResbs="";
         for(Map<String, Object> v : resBsPhids)
         {
@@ -1083,6 +1087,7 @@ public class BOQService {
         row.put("Code", code);
         row.put("Cname", cname);
         row.put("PhidResbs", phidResbs);
+        row.put("user_sl", itemInfo.getZzsl());
 //        row.put("RcjType", itemInfo.getFeeType());
         row.put("Spec", itemInfo.getSpec());
         row.put("PhidMsunit",msunitPhid);
@@ -1090,15 +1095,15 @@ public class BOQService {
 //        row.put("ResAlias", "");
 //        row.put("Note", "");
 //        row.put("Remarks", "");
-//        row.put("Qty", 0);
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
         row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt", itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
+        row.put("Totqty", itemInfo.getQuantity());
+        row.put("Totamt", itemInfo.getNoTaxTotal());
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("MType", 2);
 //        row.put("Cblx", "");
 //        row.put("PhidQuotaD", "");
@@ -1153,8 +1158,10 @@ public class BOQService {
 //        row.put("CbsQdId", "");
 //        row.put("BoqDIsRel", "");
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());
@@ -1172,8 +1179,10 @@ public class BOQService {
      * 封装 其他项清单 参数boqmtreeDataDJ 是否是新增判断key是否有值
      * @return
      */
-    public Map<String, Object> boqmtreeDataQT(BOQOtherModel itemInfo, Long phid,Long parentPhid,List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids) {
-
+    public Map<String, Object> boqmtreeDataQT(BOQOtherModel itemInfo, Long phid,Long parentPhid,
+                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              boolean isCost) {
+        itemInfo.setUnit("m");
         String wbsCode=itemInfo.getBidNodeID();
 //        String wbsPhid=jdbcTemplate.queryForObject("select phid from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
 //        String wbsName=jdbcTemplate.queryForObject("select description from bd_wbs  where pcid='"+pcPhid+"' and wbs_realcode='"+wbsCode+"'",String.class);
@@ -1192,7 +1201,7 @@ public class BOQService {
         String msunitPhid="";
         for(Map<String, Object> v : msunitPhids)
         {
-            if(String.valueOf(v.get("MSNAME")).equals(wbsCode))
+            if(String.valueOf(v.get("MSNAME")).equals(itemInfo.getUnit()))
             {
                 msunitPhid= String.valueOf(v.get("PHID"));
                 break;
@@ -1229,6 +1238,7 @@ public class BOQService {
 //        row.put("Expression", "");
 //        row.put("PhidCbs", "");
 //        row.put("PhidCbs_EXName", "");
+
         row.put("Rate", 0);
 //        row.put("Remarks", "");
 //        row.put("Qty", 0);
@@ -1279,7 +1289,7 @@ public class BOQService {
 //        row.put("PhidSource", 0);
 //        row.put("ImpInfo", 0);
 //        row.put("Nullify", 0);
-        row.put("OriQty", 1);
+        row.put("Qty", 1);
 //        row.put("CurrQty", 0);
 //        row.put("CurrChangeQty", 0);
 //        row.put("OriPrc", 0);
@@ -1318,7 +1328,7 @@ public class BOQService {
      */
     public Map<String, Object> boqdgridDataQT(BOQFeeModel itemInfo, Long phid,Long parentPhid,
                                               List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
-                                              List<Map<String, Object>> resBsPhids) {
+                                              String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
 //        String msunitPhid=jdbcTemplate.queryForObject("select phid from msunit where msname='"+itemInfo.getUnit()+"'",String.class);
@@ -1359,7 +1369,7 @@ public class BOQService {
 //        row.put("PhidResbs", "");
 //        row.put("PhidResbs_EXName", "");
         String code=itemInfo.getCode();
-        String cname=itemInfo.getCode();
+        String cname=itemInfo.getName();
         String phidResbs="";
         for(Map<String, Object> v : resBsPhids)
         {
@@ -1374,6 +1384,7 @@ public class BOQService {
         row.put("Code", code);
         row.put("Cname", cname);
         row.put("PhidResbs", phidResbs);
+        row.put("user_sl", itemInfo.getZzsl());
 //        row.put("RcjType", itemInfo.getFeeType());
         row.put("Spec", itemInfo.getSpec());
         row.put("PhidMsunit",msunitPhid);
@@ -1381,15 +1392,15 @@ public class BOQService {
 //        row.put("ResAlias", "");
 //        row.put("Note", "");
 //        row.put("Remarks", "");
-//        row.put("Qty", 0);
+        row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
         row.put("Prc", itemInfo.getNoTaxRate());
-//        row.put("Amt", itemInfo.getTaxRate());
-//        row.put("Totqty", 0);
-//        row.put("Totamt", 0);
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
+        row.put("Totqty", itemInfo.getQuantity());
+        row.put("Totamt", itemInfo.getNoTaxTotal());
         String fType=itemInfo.getFeeType();//分包方式
         fType=fType.equals("1")?"2":fType.equals("2")?"7":fType.equals("3")?
                 "8":fType.equals("4")?"6":fType.equals("8")?"3":"*";
-        row.put("FType", fType);
+        row.put("Ftype", fType);
         row.put("MType", 3);
 //        row.put("Cblx", "");
 //        row.put("PhidQuotaD", "");
@@ -1444,8 +1455,10 @@ public class BOQService {
 //        row.put("CbsQdId", "");
 //        row.put("BoqDIsRel", "");
         row.put("key", "");
+        row.put("user_sl", Double.parseDouble(itemInfo.getZzsl())*0.01);
         row.put("user_jjsjk", itemInfo.getId());
         row.put("user_zhdjjs", itemInfo.getTaxRate());
+        row.put("user_djhs", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getTaxRate()));
         row.put("user_hjhs", itemInfo.getTaxTotal());
         row.put("user_sjdj", itemInfo.getSjRate());
         row.put("user_sjhj", itemInfo.getSjTotal());

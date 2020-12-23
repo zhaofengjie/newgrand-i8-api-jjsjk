@@ -46,6 +46,11 @@ public class BOQBQFeeModel {
     @JsonProperty(value = "Quantity")
     private String quantity;
     /**
+     * 增值税率
+     */
+    @JsonProperty(value = "Zzsl")
+    private String zzsl;
+    /**
      * 费用项含税单价
      */
     @JsonProperty(value = "TaxRate")

@@ -73,7 +73,7 @@ public class CostController {
                 "left join fg3_workcycle t3 on t3.phid=t1.u_qj\n" +
                 "left join payway t4 on t4.phid=t1.u_jsfs\n" +
                 "left join fg3_enterprise t5 on t5.phid=t1.u_zfdx\n" +
-                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null)";
+                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null) and ischeck='1'";
 
         RowMapper<OddBillModel> rowMapper=new BeanPropertyRowMapper(OddBillModel.class);
         List<OddBillModel> oddBills= jdbcTemplate.query(sqlM, rowMapper);
@@ -151,7 +151,7 @@ public class CostController {
                 "left join project_table t2 on t2.phid=t1.pc\n" +
                 "left join fg3_workcycle t3 on t3.phid=t1.u_qj\n" +
                 "left join fg_orglist t4 on t4.phid=t1.ocode\n" +
-                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null)";
+                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null) and ischeck='1'";
 
         RowMapper<DeviceSharedModel> rowMapper=new BeanPropertyRowMapper(DeviceSharedModel.class);
         List<DeviceSharedModel> deviceSharedModels= jdbcTemplate.query(sqlM, rowMapper);
@@ -228,7 +228,7 @@ public class CostController {
                 "left join bd_cbs t3 on t3.phid=t1.u_aqfykm \n" +
                 "left join bd_cbs t4 on t4.phid=t1.u_cbkm \n" +
                 "left join fg_simple_data t5 on t5.phid=t1.u_ywlx\n" +
-                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null)";
+                "where (t1.u_tbjjsjk!='1' or u_tbjjsjk is null) and ischeck='1'";
 
         RowMapper<DeviceSharedModel> rowMapper=new BeanPropertyRowMapper(DeviceSharedModel.class);
         List<DeviceSharedModel> deviceSharedModels= jdbcTemplate.query(sqlM, rowMapper);
@@ -279,10 +279,10 @@ public class CostController {
 
         var sqlM="select t1.phid id, t1.bill_no bIllNo,t1.bill_dt billdt,t1.title billName,t2.pc_no pcNo,\n" +
                 "t2.project_name pcName,to_char(t3.bdt,'yyyy-mm') period\n" +
-                "from pco3_cost_other_m\tt1\n" +
+                "from pco3_cost_other_m t1\n" +
                 "left join project_table t2 on t2.phid=t1.phid_pc\n" +
-                "left join fg3_workcycle t3 on t3.phid=t1.phid_cycle \n" ;
-//                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null)";
+                "left join fg3_workcycle t3 on t3.phid=t1.phid_cycle \n" +
+                "where t1.chk_flg='1' and (t1.user_tbjjsjk!='1' or user_tbjjsjk is null)";
 
         RowMapper<OtherRealCostModel> rowMapper=new BeanPropertyRowMapper(OtherRealCostModel.class);
         List<OtherRealCostModel> otherRealCostModels= jdbcTemplate.query(sqlM, rowMapper);

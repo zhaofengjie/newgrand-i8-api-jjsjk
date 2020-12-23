@@ -71,7 +71,7 @@ public class RepositoryController {
                 "left join teams_gr t7 on t7.phid=t1.phid_classno\n" +
                 "left join hr_epm_main t8 on t8.phid=t1.phid_userpsn\n " +
                 "left join kc_transtype t9 on t9.phid=t1.phid_transno\n" +
-                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and t9.phid=6";
+                "where (t1.user_tbjjsjk!='1' or user_tbjjsjk is null) and t9.phid=6 and t1.chk_flg='1'";
 
         RowMapper<RepositoryLLModel> rowMapper=new BeanPropertyRowMapper(RepositoryLLModel.class);
         List<RepositoryLLModel> repositoryLLs= jdbcTemplate.query(sqlM, rowMapper);
