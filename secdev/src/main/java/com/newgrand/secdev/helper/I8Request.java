@@ -246,6 +246,7 @@ public class I8Request {
             int statusCode = response.getStatusLine().getStatusCode();
             // 没有正常响应
             if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
+                result="调用产品接口失败,状态码:"+statusCode;
                 throw new RuntimeException("statusCode : " + statusCode);
             }
             // 获取响应体
