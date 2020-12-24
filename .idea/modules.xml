@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/newgrand-i8-3rdIntegration.iml" filepath="$PROJECT_DIR$/.idea/newgrand-i8-3rdIntegration.iml" />
-      <module fileurl="file://$PROJECT_DIR$/secdev/secdev.iml" filepath="$PROJECT_DIR$/secdev/secdev.iml" />
+      <module fileurl="file://$PROJECT_DIR$/secdev.iml" filepath="$PROJECT_DIR$/secdev.iml" />
     </modules>
   </component>
 </project>
