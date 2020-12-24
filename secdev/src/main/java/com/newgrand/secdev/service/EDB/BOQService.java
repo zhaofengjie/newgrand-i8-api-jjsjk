@@ -737,7 +737,7 @@ public class BOQService {
      * @return
      */
     public Map<String, Object> boqdgridDataFB(BOQBQFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
@@ -746,7 +746,7 @@ public class BOQService {
 //        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {
@@ -1030,7 +1030,7 @@ public class BOQService {
      * @return
      */
     public Map<String, Object> boqdgridDataDJ(BOQMeasureFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
@@ -1039,7 +1039,7 @@ public class BOQService {
 //        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {
@@ -1327,7 +1327,7 @@ public class BOQService {
      * @return
      */
     public Map<String, Object> boqdgridDataQT(BOQFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               String mQty,List<Map<String, Object>> resBsPhids) {
 
         itemInfo.setUnit("m");
@@ -1336,7 +1336,7 @@ public class BOQService {
 //        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {

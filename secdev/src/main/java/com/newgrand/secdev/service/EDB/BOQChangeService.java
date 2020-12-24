@@ -737,7 +737,7 @@ public class BOQChangeService {
      * @return
      */
     public Map<String, Object> boqdgridDataFBChg(BOQBQFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
 
         if(changD==null)
@@ -754,7 +754,7 @@ public class BOQChangeService {
         itemInfo.setUnit("m");
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {
@@ -778,8 +778,26 @@ public class BOQChangeService {
         row.put("Pphid", parentPhid);
         row.put("PhidCbs", cbsPhid);
         row.put("PhidCbs_EXName", cbsName);
-        row.put("Code", itemInfo.getCode());
-        row.put("Cname", itemInfo.getName());
+//        row.put("Code", itemInfo.getCode());
+//        row.put("Cname", itemInfo.getName());
+
+        String code=itemInfo.getCode();
+        String cname=itemInfo.getName();
+        String phidResbs="";
+        for(Map<String, Object> v : resBsPhids)
+        {
+            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
+            {
+                code= String.valueOf(v.get("CODE"));
+                cname= String.valueOf(v.get("NAME"));
+                phidResbs= String.valueOf(v.get("PHID"));
+                break;
+            }
+        }
+        row.put("Code", code);
+        row.put("Cname", cname);
+        row.put("PhidResbs", phidResbs);
+
         //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
         //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式
@@ -790,9 +808,11 @@ public class BOQChangeService {
         row.put("PhidMsunit",msunitPhid);
         row.put("PhidMsunit_EXName", itemInfo.getUnit());
 
-        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
         row.put("Qty",Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty));//单耗量=费用项总量/清单总量
         row.put("Prc", itemInfo.getNoTaxRate());
+        row.put("Amt", Double.parseDouble(itemInfo.getQuantity())/Double.parseDouble(mQty)*Double.parseDouble(itemInfo.getNoTaxRate()));
+        row.put("Totqty", itemInfo.getQuantity());
+        row.put("Totamt", itemInfo.getNoTaxTotal());
         row.put("OriPrc",changD.getOriPrc());
         row.put("OriQty",changD.getOriQty());
         row.put("OriAmt",changD.getOriAmt());
@@ -932,7 +952,7 @@ public class BOQChangeService {
      * @return
      */
     public Map<String, Object> boqdgridDataDJChg(BOQMeasureFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
         if(changD==null)
         {
@@ -951,7 +971,7 @@ public class BOQChangeService {
 //        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {
@@ -983,8 +1003,25 @@ public class BOQChangeService {
 //        row.put("PhidRestype", "");
 //        row.put("PhidResbs", "");
 //        row.put("PhidResbs_EXName", "");
-        row.put("Code", itemInfo.getCode());
-        row.put("Cname", itemInfo.getName());
+//        row.put("Code", itemInfo.getCode());
+//        row.put("Cname", itemInfo.getName());
+
+        String code=itemInfo.getCode();
+        String cname=itemInfo.getName();
+        String phidResbs="";
+        for(Map<String, Object> v : resBsPhids)
+        {
+            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
+            {
+                code= String.valueOf(v.get("CODE"));
+                cname= String.valueOf(v.get("NAME"));
+                phidResbs= String.valueOf(v.get("PHID"));
+                break;
+            }
+        }
+        row.put("Code", code);
+        row.put("Cname", cname);
+        row.put("PhidResbs", phidResbs);
         //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
         //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式
@@ -1179,7 +1216,7 @@ public class BOQChangeService {
      * @return
      */
     public Map<String, Object> boqdgridDataQTChg(BOQFeeModel itemInfo, Long phid,Long parentPhid,
-                                              List<Map<String, Object>> wbsPhids,List<Map<String, Object>> msunitPhids,
+                                              List<Map<String, Object>> cbsPhids,List<Map<String, Object>> msunitPhids,
                                               BOQChangeDModel changD,String mQty,List<Map<String, Object>> resBsPhids) {
         if(changD==null)
         {
@@ -1198,7 +1235,7 @@ public class BOQChangeService {
 //        String cbsName=jdbcTemplate.queryForObject("select cbs_name from bd_cbs where cbs_code='"+itemInfo.getCourseCode()+"' and pcid="+pcPhid,String.class);
         String cbsPhid="";
         String cbsName="";
-        for(Map<String, Object> v : wbsPhids)
+        for(Map<String, Object> v : cbsPhids)
         {
             if(String.valueOf(v.get("CBS_CODE")).equals(itemInfo.getCourseCode()))
             {
@@ -1225,8 +1262,25 @@ public class BOQChangeService {
         row.put("PhidCbs", cbsPhid);
         row.put("PhidCbs_EXName", cbsName);
 
-        row.put("Code", itemInfo.getCode());
-        row.put("Cname", itemInfo.getName());
+//        row.put("Code", itemInfo.getCode());
+//        row.put("Cname", itemInfo.getName());
+
+        String code=itemInfo.getCode();
+        String cname=itemInfo.getName();
+        String phidResbs="";
+        for(Map<String, Object> v : resBsPhids)
+        {
+            if(String.valueOf(v.get("CODE")).equals(itemInfo.getMaterialCode()))
+            {
+                code= String.valueOf(v.get("CODE"));
+                cname= String.valueOf(v.get("NAME"));
+                phidResbs= String.valueOf(v.get("PHID"));
+                break;
+            }
+        }
+        row.put("Code", code);
+        row.put("Cname", cname);
+        row.put("PhidResbs", phidResbs);
         //FeeType：1-劳务分包 2-材料费 3-周转材料费 4-机械费 8-专业分包
         //新中大   2			7		8			6			3
         String fType=itemInfo.getFeeType();//分包方式

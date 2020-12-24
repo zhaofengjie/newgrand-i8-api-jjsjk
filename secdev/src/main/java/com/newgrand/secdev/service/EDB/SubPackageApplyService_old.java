@@ -39,12 +39,6 @@ public class SubPackageApplyService_old {
      */
     @Value("${i8.edb.boqysflCost}")
     private String boqysflCost;
-    /**
-     * 分包计划方案phid
-     */
-    @Value("${i8.edb.subPackageApplyDetailScheme}")
-    private String subPackageApplyDetailScheme;
-
 
     @Autowired
     @Resource(name = "jdbcTemplateOrcle")
