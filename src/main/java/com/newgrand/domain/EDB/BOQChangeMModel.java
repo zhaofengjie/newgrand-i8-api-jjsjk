@@ -1,6 +1,6 @@
 package com.newgrand.domain.EDB;
 
-import com.sun.xml.internal.ws.api.FeatureListValidatorAnnotation;
+
 import lombok.Getter;
 import lombok.Setter;
 
