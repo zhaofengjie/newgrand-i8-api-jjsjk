@@ -15,7 +15,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class Swagger2Configuration {
 
     //api接口包扫描路径
-    public static final String SWAGGER_SCAN_BASE_PACKAGE = "com.newgrand.secdev.controller";
+    public static final String SWAGGER_SCAN_BASE_PACKAGE = "com.newgrand.controller";
     public static final String VERSION = "1.0.0";
     @Bean
     public Docket createRestApi() {

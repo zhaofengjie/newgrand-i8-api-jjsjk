@@ -155,12 +155,12 @@ public class BOQChangeService {
         }
         //判断CBS是否存在
         ArrayList<String> cbsCodes=new ArrayList<>();
-        cbsCodes.addAll(param.getFeeItemInfos().stream().map(m->m.getCourseCode()).collect(Collectors.toList()));
+        cbsCodes.addAll(param.getFeeItemInfos().stream().map(m->m.getCourseCode()).distinct().collect(Collectors.toList()));
         param.getBQItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
                 {
                     if(!cbsCodes.contains(ff.getCourseCode()))
-                    cbsCodes.add(ff.getCourseCode());
+                        cbsCodes.add(ff.getCourseCode());
                 }));
         param.getMeasureItemInfos().stream().map(m->m.getFeeItemInfos())
                 .forEach(f->f.forEach(ff->
@@ -236,7 +236,7 @@ public class BOQChangeService {
                     if(!resBsCodes.contains(ff.getMaterialCode()))
                         resBsCodes.add(ff.getMaterialCode());
                 }));
-        List<Map<String, Object>> resBsPhids=jdbcTemplate.queryForList("select phid,code,name from res_bs  where pcid="+pcPhid+" and code in ('"+ StringUtils.join(resBsCodes,"','")+"')");
+        List<Map<String, Object>> resBsPhids=jdbcTemplate.queryForList("select phid,code,name from res_bs  where  code in ('"+ StringUtils.join(resBsCodes,"','")+"')");
 
 
         //endregion
@@ -434,10 +434,10 @@ public class BOQChangeService {
         QDjjsjkids.addAll(param.getOtherItemInfos().stream().map(m->m.getId()).collect(Collectors.toList()));
         QDjjsjkids.add("xzd_9999");
         //变更前值
-        var befortAmt=jdbcTemplate.queryForObject("select sum(curramt) from pms3_boq_m where pphid="+oldPhid+" and phid in (" +
-                "select distinct phid from pms3_boq_m where change_bill!=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')\n" +
+        var befortAmt=jdbcTemplate.queryForObject("select sum(nvl(curr_amt,0)) from pms3_boq_m where pphid="+oldPhid+" and phid in (" +
+                "select distinct phid from pms3_boq_m where change_m!=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')\n" +
                 "union \n" +
-                "select distinct pms3_boq_m_phid from pms3_boq_m where change_bill=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"')", Double.class);
+                "select distinct pms3_boq_m_phid from pms3_boq_m where change_m=1 and  user_jjsjk in ('"+StringUtils.join(QDjjsjkids.toArray(),"','")+"'))", Double.class);
         //变更后值
         double afterAmt= 0;
         afterAmt+=param.getBQItemInfos().stream().mapToDouble(f -> Double.parseDouble(f.getTotal())).sum();
