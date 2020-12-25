@@ -73,7 +73,7 @@ public class TestController {
     @Value("${i8.edb.url.boqChkUrl}")
     private String boqChkUrl;
 
-    @ApiOperation(value="推送CBS数据到经济数据库", notes="推送CBS数据到经济数据库")
+    @ApiOperation(value="查询环境变量", notes="查询环境变量")
     @RequestMapping(value = "/test",method = RequestMethod.GET)
     public String test()
     {

@@ -23,7 +23,7 @@ public class Swagger2Configuration {
                 .apiInfo(apiInfo())
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(SWAGGER_SCAN_BASE_PACKAGE))
-                .paths(PathSelectors.ant("/api/*")) // 可以根据url路径设置哪些请求加入文档，忽略哪些请求
+                .paths(PathSelectors.ant("/edbApi/*")) // 可以根据url路径设置哪些请求加入文档，忽略哪些请求
                 .build();
     }
 
