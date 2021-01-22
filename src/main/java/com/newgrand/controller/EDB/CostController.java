@@ -58,7 +58,7 @@ public class CostController {
     protected String otherRealCostUrl;
 
     /**
-     * 推送零星单到经济数据库
+     * 推送零星单到经济数据库（改为其他实际成本）
      * @return
      */
     @ApiOperation(value="推送零星单到经济数据库", notes="推送零星单到经济数据库", produces="application/json")
@@ -270,7 +270,7 @@ public class CostController {
     }
 
     /**
-     * 推送其他实际成本到经济数据库
+     * 推送其他实际成本到经济数据库（改为零星费用单）
      * @return
      */
     @ApiOperation(value="推送其他实际成本到经济数据库", notes="推送其他实际成本到经济数据库", produces="application/json")
